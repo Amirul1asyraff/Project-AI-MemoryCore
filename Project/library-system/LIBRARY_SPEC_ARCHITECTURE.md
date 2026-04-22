@@ -49,18 +49,23 @@
 ## System Components
 
 ### 1. **Frontend (Client Layer)**
-- **Technology:** HTML5, CSS3, JavaScript (Vue.js or Laravel Blade + Alpine.js)
-- **Responsive:** Mobile-first approach (tablets, smartphones, desktops)
-- **Languages:** English & Bahasa Malaysia with language toggle
-- **Performance:** Optimized for slow connections in certain regions
+- **Technology:** Vue.js 3 SPA with Vite build tool
+- **State Management:** Pinia for centralized state
+- **Routing:** Vue Router for client-side navigation
+- **Styling:** Tailwind CSS with responsive design
+- **API Communication:** Axios with Laravel Sanctum authentication
+- **Languages:** English & Bahasa Malaysia with Vue i18n
+- **Performance:** Code splitting, lazy loading, optimized for slow connections
 
 ### 2. **Backend (Laravel Application)**
 
 #### API Layer
 - **Framework:** Laravel 11 (latest stable)
 - **API Style:** RESTful with JSON responses
-- **Authentication:** JWT tokens + session management
+- **Authentication:** Laravel Sanctum (SPA + API tokens)
+- **Authorization:** Spatie Laravel Permission (RBAC)
 - **Rate Limiting:** Prevent abuse, optimize barcode scanner requests
+- **CORS:** Sanctum stateful middleware for SPA
 
 #### Core Services
 - **AuthService** - User authentication and token management

@@ -13,10 +13,11 @@
 ### Authentication & Security
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **Auth Framework** | Laravel Breeze | Simple, secure, pre-built authentication |
-| **JWT Tokens** | `firebase/jwt` | API token authentication |
+| **Auth Framework** | Laravel Breeze (Vue) | Simple, secure, pre-built authentication with Vue SPA |
+| **API Auth** | Laravel Sanctum | SPA authentication + API token management |
+| **Roles & Permissions** | Spatie Laravel Permission | RBAC (Admin, Librarian, Front Desk, Member) |
 | **Password Hashing** | Bcrypt | Laravel default, secure password storage |
-| **CORS** | Laravel CORS middleware | Prevent unauthorized cross-origin requests |
+| **CORS** | Laravel Sanctum middleware | Stateful SPA authentication |
 | **Rate Limiting** | Laravel middleware | Prevent abuse and DDoS attacks |
 
 ### APIs & Services
@@ -28,23 +29,28 @@
 | **Queues** | Laravel Queue (Redis/Database) | Async tasks (email, reports) |
 | **Caching** | Redis/File Cache | Cache catalog searches, reduce DB load |
 
-### Utilities
+### Utilities & Packages
 | Component | Package | Purpose |
 |-----------|---------|---------|
-| **Validation** | Laravel Validator | Input validation, form rules |
-| **Localization** | Laravel i18n | Bilingual support (English & Malay) |
+| **Validation** | Laravel Validator | Server-side input validation, form rules |
+| **Localization** | Laravel i18n + Vue i18n | Bilingual support (English & Malay) |
 | **Carbon** | Carbon (Laravel built-in) | Date/time manipulation |
 | **UUID** | `ramsey/uuid` | Member ID generation |
 | **HTTP Client** | Guzzle (Laravel built-in) | Make HTTP requests |
+| **Media Library** | Spatie Laravel MediaLibrary | Book cover image uploads & management |
+| **Activity Log** | Spatie Laravel Activitylog | Audit trail for all operations |
 
 ### Development Tools
 | Tool | Purpose |
 |------|---------|
 | **Laravel Tinker** | REPL for testing code |
 | **Laravel Telescope** | Debug requests, queries, performance |
-| **Laravel Debugbar** | Development debugging |
+| **Laravel Debugbar** | Development debugging (dev only) |
 | **PHPStan** | Static code analysis |
 | **PHP-CS-Fixer** | Code formatting |
+| **Vue DevTools** | Vue component debugging |
+| **ESLint** | JavaScript/Vue linting |
+| **Prettier** | Code formatting for JS/Vue |
 
 ---
 
@@ -53,17 +59,21 @@
 ### Core Technologies
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **Templating** | Laravel Blade | Server-side rendering, simplicity |
-| **Interactivity** | Alpine.js | Lightweight, no build step required |
+| **SPA Framework** | Vue.js 3 | Modern reactive UI, component-based architecture |
+| **State Management** | Pinia | Centralized state management for Vue 3 |
+| **Routing** | Vue Router | Client-side routing for SPA |
 | **Styling** | Tailwind CSS | Utility-first, rapid development |
 | **Icons** | Heroicons | Consistent, beautiful icons |
+| **Build Tool** | Vite | Fast build tool, HMR for development |
+| **Package Manager** | npm | Frontend dependency management |
 
-### Optional Frontend Enhancements
-| Component | Technology | When to Use |
-|-----------|-----------|-------------|
-| **SPA Framework** | Vue.js 3 | If more interactivity needed |
-| **Package Manager** | npm/yarn | Frontend dependency management |
-| **Build Tool** | Vite | Fast build tool for modern apps |
+### Vue.js Integration
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Laravel Integration** | Laravel Breeze (Vue) | Pre-built auth scaffolding with Vue |
+| **API Communication** | Axios | HTTP client for API calls |
+| **Form Handling** | VeeValidate | Client-side form validation |
+| **UI Components** | Headless UI | Accessible, unstyled components |
 
 ### Browser Compatibility
 ```
@@ -178,30 +188,40 @@ Requirements:
 - PHP 8.2+
 - Composer
 - MySQL 8.0 or SQLite (local)
-- Node.js 18+ (for npm)
+- Node.js 18+ (for npm/Vite)
 
-Setup:
+Setup (Laravel + Vue SPA):
 1. git clone <repo>
 2. composer install
 3. npm install
 4. cp .env.example .env
 5. php artisan key:generate
 6. php artisan migrate --seed
-7. npm run dev (if using Vite)
-8. php artisan serve
+7. npm run dev (Vite dev server with HMR)
+8. php artisan serve (API backend)
+
+Access:
+- Frontend: http://localhost:5173 (Vite)
+- Backend API: http://localhost:8000 (Laravel)
 ```
 
-### Development Tools
+### Testing Tools
 ```bash
-Testing:
-- PHPUnit (unit tests)
+Backend Testing:
+- PHPUnit (unit & feature tests)
 - Laravel Dusk (browser testing)
 - Pest (modern testing alternative)
+
+Frontend Testing:
+- Vitest (Vue unit tests)
+- Vue Test Utils (component testing)
+- Cypress/Playwright (E2E testing)
 
 Code Quality:
 - PHPStan (static analysis)
 - PHP-CS-Fixer (code formatting)
 - Laravel Pint (opinionated formatter)
+- ESLint + Prettier (JS/Vue)
 ```
 
 ---
