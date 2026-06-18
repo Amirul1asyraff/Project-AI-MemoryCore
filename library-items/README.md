@@ -31,6 +31,7 @@ You can also browse items manually and copy any `.md` file directly into your `l
 | Section | Item | Description |
 |---------|------|-------------|
 | `laravel` | `laravel-workflow` | Complete step-by-step guide: Installation, Auth, Migrations, CRUD, and Testing. |
+| `laravel` | `react-for-laravel-devs` | Zero-knowledge guide for PHP devs transitioning to React with Inertia.js. |
 | `security` | `security-headers` | HTTP security headers with CSP — framework-agnostic (Laravel, Express, Spring Boot, Nginx/Apache) |
 
 ## Item Format
