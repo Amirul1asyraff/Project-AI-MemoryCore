@@ -16,7 +16,7 @@ description: "MUST use when committing code changes, when user says 'commit',
 
 When this skill activates, output:
 
-`"Committing changes to history..."`
+`"Saving progress to Git..."`
 
 Then execute the commit protocol automatically.
 
@@ -52,13 +52,13 @@ Then execute the commit protocol automatically.
   ```
   [Achievement Title] - [Brief technical summary]
 
-  === [SECTION_1_NAME] ===
+  === IMPLEMENTATION ===
   • [File/Component]: [Specific change description]
   • [File/Component]: [Specific change description]
 
-  === [SECTION_2_NAME] ===
+  === SESSION CONTEXT ===
   • Project: [name] | Type: [type] | Time: ~XX min
-  • [Custom fields as configured]
+  • Author: AMIRUL <164971402+Amirul1asyraff@users.noreply.github.com>
   ```
 
 - [ ] For trivial changes: use Minimal format (one-liner, no sections)
@@ -121,9 +121,3 @@ After completing ANY task, the AI automatically:
 | **No git repository** | Inform user: "No git repository found in this directory" |
 | **Multiple logical changes** | Split into separate commits for clean history |
 | **User says "undo last commit"** | Guide user with `git reset --soft HEAD~1` (keep changes staged) |
-
-## Level History
-
-- **Lv.1** — Base: Analyze staged changes, draft structured commit message with configurable sections, enforce human authorship, no-emoji rule, time tracking, sensitive file detection. (Origin: Production AI companion commit workflow)
-- **Lv.2** — Auto-Commit: Removed approval gate — AI analyzes, drafts, and commits in one seamless flow without waiting for user confirmation on the message.
-- **Lv.3** — Vigilant: Proactive post-task detection — auto-checks `git status` after completing any task and commits if dirty. No work ever left behind.

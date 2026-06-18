@@ -91,6 +91,14 @@
 - Learned the repo is a markdown-based memory system, not a Laravel package
 - Decided to use it directly in Claude.ai chat for token optimization & reducing hallucination
 
+**Session 2** - Fork Synchronization & Workflow Learning:
+- Successfully synchronized the fork with the upstream `Kiyoraka` repository.
+- Merged new features: Topic Diary, User-Prompt Hook, and Prompt Injectors.
+- Established the "Save & Update" workflow for session persistence.
+- Clarified the meaning of "installing" features as AI-learning (Cognitive Installation).
+- Established **Level 2 Library**: Moved Laravel workflow to `library-items/laravel/`.
+- Refined **Laravel 13 Workflow**: Enhanced the master template with PHP 8.3 standards, Native AI SDK, and Lucy's Shortcuts.
+
 **Ongoing Sessions**: Will document patterns and development
 - Key decisions made per project
 - Concepts learned and understood
@@ -98,6 +106,7 @@
 
 ### Growth Patterns
 - **Session 1**: Identity established, preferences set, workflow understood
+- **Session 2**: System updated to latest upstream, workflow confirmed, feature roadmap defined.
 - **Ongoing**: Will deepen technical context as projects grow
 
 ## Technical Knowledge Base — Amirul's Stack
@@ -106,7 +115,7 @@
 - **Backend**: Laravel (PHP)
 - **Database**: MySQL
 - **Frontend**: General web (HTML, CSS, JS)
-- **Tools**: Git, GitHub
+- **Tools**: Git, GitHub, Gemini CLI (for file management)
 
 ### Decisions Made
 *(Will grow as Amirul works on projects)*
