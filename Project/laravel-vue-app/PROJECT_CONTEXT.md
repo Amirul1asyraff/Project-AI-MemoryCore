@@ -70,7 +70,7 @@ Applying page-wide `overflow-x-hidden` or forcing scroll restrictions on the `ht
     * `uploadMedia`: Handles Axios file drops and attaches them to task media collection.
     * `deleteMedia`: Removes media attachments by ID.
     * `destroy`: Deletes tasks and automatically wipes all associated Spatie media storage folders.
-  * **View features:** Modal overlay, drag-and-drop file uploader zone, upload queue progress bar animations, card image cover rendering, and zoom lightbox views.
+  * **View features:** Modal overlay, drag-and-drop file uploader zone, upload queue progress bar animations, card image cover rendering, zoom lightbox views, custom warning confirmation modal for delete actions, and dynamic corner toast alert feedback.
 
 ## 🧪 Testing Status
 * Successfully verified Breeze auth and Inertia navigation tests.
