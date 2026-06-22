@@ -71,7 +71,21 @@ Applying page-wide `overflow-x-hidden` or forcing scroll restrictions on the `ht
     * `deleteMedia`: Removes media attachments by ID.
     * `destroy`: Deletes tasks and automatically wipes all associated Spatie media storage folders.
   * **View features:** Modal overlay, drag-and-drop file uploader zone, upload queue progress bar animations, card image cover rendering, zoom lightbox views, custom warning confirmation modal for delete actions, and dynamic corner toast alert feedback.
+* **Live Analytics Dashboard (`/analytics`):** Routes to `Analytics/Index.vue`. Powered by:
+  * **Library:** `vue3-apexcharts` + `apexcharts` (npm installed).
+  * **Controller:** `app/Http/Controllers/AnalyticsController.php` with:
+    * `index`: Returns Inertia view.
+    * `stats`: JSON endpoint — returns live DB stats (task counts, task status breakdown, 7-day task creation trend, top ideas by upvotes, activity feed).
+  * **Vue Concepts Showcased:**
+    * `onMounted` / `onUnmounted` lifecycle hooks for safe setInterval polling.
+    * `setInterval` polling every 5 seconds with automatic cleanup on unmount.
+    * `requestAnimationFrame` animated counter transitions (`easeOutCubic`).
+    * `computed` reactive chart series/options that update automatically when data changes.
+    * `reactive` objects for granular state tracking (totals, taskStatus, display).
+  * **Charts:** Area chart (7-day task trend), Donut chart (task status), Bar chart (top ideas by votes).
+  * **Other features:** Loading skeleton, live activity feed, "why this is impossible in Blade" explainer panel, responsive nav with active state highlighting.
 
 ## 🧪 Testing Status
 * Successfully verified Breeze auth and Inertia navigation tests.
 * Verified that Spatie MediaLibrary generates thumbnails and registers uploads locally without errors.
+* Vite build compiles all pages (including ApexCharts analytics) in ~1.5s with zero errors.

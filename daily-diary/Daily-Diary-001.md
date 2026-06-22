@@ -148,3 +148,36 @@ Amirul asked about a major feature possible in Vue that is difficult in Blade. P
 ---
 
 📖 *Diary entry complete - session preserved*
+
+---
+
+## Session: 2026-06-22 (Evening) - Real-Time Live Dashboard with Charts
+
+### Context
+Amirul requested adding a completely new and powerful Vue feature to `laravel-vue-app` that is entirely different from what was built previously (Kanban + Spatie Media Uploader) and showcases Vue's unique strengths over Blade.
+
+### Planned Feature: `/analytics` — Live Dashboard with Real-Time Charts
+- **Why it's impossible in Blade alone**: A live-refreshing dashboard with animated charts, reactive data polling, and real-time counter animations requires Vue's reactivity system and component lifecycle hooks (`onMounted`, `onUnmounted`, `setInterval`, `watch`). Blade is server-rendered and cannot update in the browser without a full page reload.
+- **Tech used**: ApexCharts (via vue3-apexcharts), Vue `setInterval` polling, Laravel JSON API endpoints returning live DB stats.
+
+### Actions Taken
+1. Installed `vue3-apexcharts` and `apexcharts` via npm.
+2. Created `/api/stats` Laravel JSON route returning live counts from DB tables (Tasks, Ideas, Media).
+3. Built `Analytics/Index.vue` with:
+   - Animated stat counter cards (reactive number transitions using `requestAnimationFrame`).
+   - Live Area Chart showing task creation over time.
+   - Live Donut Chart showing task status breakdown (todo/in-progress/done).
+   - Live Bar Chart showing idea votes by title.
+   - Auto-polling every 5 seconds via `setInterval` + `onUnmounted` cleanup.
+   - Refresh indicator with spinner and last-updated timestamp.
+4. Registered `/analytics` Inertia route and added nav link to all existing pages.
+5. Committed to `laravel-vue-app` git repository.
+
+### Technical Decisions
+- **Polling over WebSockets**: Used 5-second interval polling for simplicity (avoids Pusher/Echo config). Demonstrates lifecycle hooks and cleanup patterns — a core Vue concept.
+- **ApexCharts**: Best-in-class animated chart library with Vue 3 official integration.
+- **Animated counters**: Custom `animateValue()` utility using `requestAnimationFrame` shows reactive number transitions impossible in Blade.
+
+---
+
+📖 *Diary entry complete - session preserved*
