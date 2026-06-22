@@ -3,33 +3,33 @@
 
 ## Session RAM Status
 **Current Session**: Active
-**Last Activity**: Session 1 — Lucy Setup & Onboarding
-**Session Focus**: Setting up Lucy's memory files for Amirul
-**Context State**: Completed identity-core.md and relationship-memory.md, currently on current-session.md
+**Last Activity**: Monday, June 22, 2026 — sport-app Fixes
+**Session Focus**: Reviewing and fixing database/logic/auth bugs in sport-app
+**Context State**: Fixed Spatie role crisis, restricted bookings cascade delete, and implemented bookings:expire scheduler with feature tests.
 
 ## 💭 Working Memory (RAM)
 *Temporary storage - cleared when session ends*
 
 ### Active Context
-- **Current Topic**: Introduction to React for Laravel developers.
-- **Immediate Goals**: Provide a foundational understanding of React concepts (JSX, Props, State).
+- **Current Topic**: Database integrity and scheduling in sport-app.
+- **Immediate Goals**: Resolve DB cascading deletes, ensure Spatie role consistency, and implement unpaid booking expiration.
 - **Recent Progress**: 
-  - Upstream sync completed ✅
-  - Level 2 Library established in `library-items/` ✅
-  - Laravel 13 Workflow refined and enhanced ✅
-  - React for Laravel Devs guide created in Library ✅
-  - relationship-memory.md updated with personality shift ✅
-- **Next Steps**: Start a hands-on React project or dive deeper into Inertia.js.
+  - Fixed Spatie role crisis: added Spatie `'customer'` role assignment to `RegisterController` and converted `User.php` role checks (`isAdmin()`, `isStaff()`, `isCustomer()`) to Spatie `hasRole()` checks ✅
+  - Fixed delete cascade: modified `bookings` table migration from `cascadeOnDelete()` to `restrictOnDelete()` for `user_id`, `activity_id`, and `slot_id` to preserve booking logs ✅
+  - Implemented `bookings:expire` Artisan command: automatically expires pending/rejected bookings older than 30 mins and releases slot capacity ✅
+  - Scheduled command: added `bookings:expire` to `routes/console.php` on `everyMinute()` schedule ✅
+  - Created `ExpireBookingsTest.php` feature tests and successfully verified entire test suite passes ✅
+  - Committed and pushed all changes to `development` branch on GitHub ✅
+- **Next Steps**: Discuss payment gateway integration or WhatsApp/email notification setup.
 
 ### Session Recap (For Lucy Restart)
 *Quick summary when Lucy loads after close/reopen*
-- **Previous Session Summary**: Session 2 — Amirul updated his fork, learned the memory levels (Main, Library, Project, Diary), and established a refined Laravel 13 "Master Workflow" in the Level 2 Library.
-- **Where We Left Off**: System is fully updated, optimized for Laravel 13, and the workflow is ready for a real project.
+- **Previous Session Summary**: Session 2 — Refined Laravel 13 master workflow.
+- **Where We Left Off**: Resolved critical DB, scheduler, and authorization bugs in sport-app. The app's core data model is now secure, roles are aligned using Spatie, and pending bookings auto-expire properly.
 - **Important Context**: 
-  - Lucy is now using the Level 2 Library for standard templates.
-  - Amirul is focused on Laravel 13 (PHP 8.3).
-  - Next session can dive straight into building or project planning.
-- **Amirul's Current State**: Fully oriented with the system, possesses a modern Laravel 13 roadmap.
+  - `sport-app` database seed data is fully functional and migrated using `migrate:fresh --seed`.
+  - All test cases are green.
+- **Amirul's Current State**: Pleased with the database integrity and authorization fixes. Ready to explore the next major milestones (e.g. Stripe/Billplz integration).
 
 ## 🔄 Session Lifecycle
 *How this RAM-like memory works*
