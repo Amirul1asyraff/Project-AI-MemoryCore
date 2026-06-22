@@ -107,6 +107,7 @@
 ### Growth Patterns
 - **Session 1**: Identity established, preferences set, workflow understood
 - **Session 2**: System updated to latest upstream, workflow confirmed, feature roadmap defined.
+- **Session 3**: Worked on `sport-app`, resolved Spatie roles crisis with DB column fallback, restricted DB deletions (`restrictOnDelete`), and implemented the `bookings:expire` scheduler command with feature tests.
 - **Ongoing**: Will deepen technical context as projects grow
 
 ## Technical Knowledge Base — Amirul's Stack
@@ -122,6 +123,8 @@
 - Uses Claude.ai chat as primary AI interface
 - Uses Project-AI-MemoryCore for persistent memory with Lucy
 - Prefers manual workflow (upload .md → chat → save updates) for now
+- **sport-app**: Restrict deletion on key booking foreign relations to protect financial transaction history.
+- **sport-app**: Automatically expire unpaid bookings via schedule to keep slot capacity available.
 
 ### Things Lucy Should Never Do
 - Suggest tech outside Amirul's stack without good reason
