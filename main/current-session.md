@@ -3,36 +3,38 @@
 
 ## Session RAM Status
 **Current Session**: Active
-**Last Activity**: Monday, June 22, 2026 — sport-app UI & Laravel-Vue Integration
-**Session Focus**: Refactoring customer UI in sport-app, initializing laravel-vue-app, setting up MySQL, and building reactive Vue sandbox + database CRUD interfaces.
-**Context State**: Redesigned sport-app customer pages, launched Laravel 13 + Vue 3 (Inertia) SPA, resolved Vite Axios import issues, created premium landing and sandbox views, fixed double scrollbars, and set up MySQL CRUD.
+**Last Activity**: Monday, June 22, 2026 (Evening) — Analytics Dashboard + Blade vs Vue Theory
+**Session Focus**: Building a real-time live analytics dashboard with ApexCharts + Vue lifecycle hooks, then discussing Blade vs Vue architecture theory.
+**Context State**: Built `/analytics` page with live polling, animated counters, 3 ApexCharts (area/donut/bar), activity feed — all auto-refreshing every 5s from MySQL. Discussed when to use Blade vs Vue and the 3 Laravel architectural patterns.
 
 ## 💭 Working Memory (RAM)
 *Temporary storage - cleared when session ends*
 
 ### Active Context
-- **Current Topic**: Moving from Laravel Blade views to full-stack Vue/Inertia/MySQL SPAs.
-- **Immediate Goals**: Compare Blade and Vue mechanics, demonstrate client-side vs database-driven reactivity, and configure local Laragon MySQL.
-- **Recent Progress**: 
-  - Refactored customer views in `sport-app` (activities search, booking forms, bookings list, profile, notifications) to look modern, balanced, and left-aligned ✅
-  - Created a fresh Laravel 13 + Vue 3 + Inertia SPA called `laravel-vue-app` ✅
-  - Resolved Vite build errors by writing `resources/js/bootstrap.js` to initialize Axios headers ✅
-  - Designed a premium dark-themed `Landing.vue` page and eliminated browser double-scrollbars by clipping glowing shapes inside an absolute overflow-hidden container ✅
-  - Created `VueShowcase.vue` sandbox (local stateful Kanban board, monthly budget slider, real-time notes parser) ✅
-  - Created `Ideas/Index.vue` database board: connected model, migration, controller, and Inertia forms to store, upvote, and delete records reactively ✅
-  - Migrated connection in `.env` to MySQL (`laravel_vue_app` on Laragon) and verified all 25 Breeze tests pass successfully ✅
-  - Created project-scoped rules in `.agents/AGENTS.md` to persist configs ✅
-- **Next Steps**: Continue adding features to the Vue SPA or jump back to sport-app payment gateway integrations.
+- **Current Topic**: `laravel-vue-app` — Vue SPA feature showcase with real-world patterns.
+- **Immediate Goals**: Demonstrate powerful Vue-only features compared to Blade.
+- **Recent Progress**:
+  - Built `/analytics` Live Dashboard with ApexCharts ✅
+    - `onMounted` / `onUnmounted` lifecycle hooks for interval polling ✅
+    - `setInterval` auto-refresh every 5s with memory-safe cleanup ✅
+    - `requestAnimationFrame` animated number counters ✅
+    - Area chart (7-day task trend), Donut chart (task status), Bar chart (idea votes) ✅
+    - Activity feed showing recent tasks + ideas ✅
+    - Loading skeleton, spinner refresh indicator ✅
+  - Explained Blade vs Vue mental model clearly ✅
+    - Amirul confirmed: simple pages = Blade, interactive/SPA = Vue
+    - Both can coexist in 1 Laravel project (Inertia / Hybrid / Full API separation)
+- **Next Steps**: Add more Vue features, start library-system project, or explore WebSockets (Laravel Echo + Soketi).
 
 ### Session Recap (For Lucy Restart)
 *Quick summary when Lucy loads after close/reopen*
-- **Previous Session Summary**: Session 3 — sport-app database constraints, Spatie roles, and bookings:expire scheduler.
-- **Where We Left Off**: Balanced the sport-app customer layout, then built a complete Laravel 13 + Vue 3 SPA with MySQL on Laragon.
-- **Important Context**: 
-  - `laravel-vue-app` is fully configured with MySQL.
-  - The Vue Sandbox is available at `/showcase` and the Idea Board is at `/ideas`.
-  - Scrollbars and Vite configurations are clean and fully tested.
-- **Amirul's Current State**: Understands the differences between Livewire (server-driven) and Vue (client-driven) reactivity. Pleased with the speed of full-stack Inertia updates. Ready to plan the next build.
+- **Previous Session Summary**: Session 4 — Built Kanban `/tasks` with Spatie Media Library, drag-drop upload, lightbox, toast, modal delete.
+- **Where We Left Off**: Finished `/analytics` dashboard, explained Blade vs Vue theory, ran `lucy save`.
+- **Important Context**:
+  - `laravel-vue-app` now has 4 main pages: `/` landing, `/showcase` Vue sandbox, `/ideas` CRUD board, `/tasks` Kanban + Spatie media, `/analytics` live dashboard.
+  - ApexCharts (`vue3-apexcharts`) is installed.
+  - All committed to git, Vite builds clean in ~1.5s.
+- **Amirul's Current State**: Understands Blade vs Vue use-cases clearly. Knows the 3 Laravel architectural patterns. Comfortable with Vue lifecycle hooks concept. Ready for next feature or new project.
 
 ## 🔄 Session Lifecycle
 *How this RAM-like memory works*

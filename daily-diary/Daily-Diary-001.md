@@ -181,3 +181,43 @@ Amirul requested adding a completely new and powerful Vue feature to `laravel-vu
 ---
 
 📖 *Diary entry complete - session preserved*
+
+---
+
+## Session: 2026-06-22 (Evening II) - Blade vs Vue Mental Model
+
+### Context
+Amirul asked for clarification on when to use Blade vs Vue, and whether both can coexist in a single Laravel project.
+
+### Key Concepts Discussed
+
+**Use Blade when:**
+- Simple admin CRUD pages, forms, login/register pages.
+- Static or server-rendered content with no client-side interactivity.
+- Speed of development is priority over UX richness.
+- Rule: If the page doesn't need to react without a full reload → Blade is perfect.
+
+**Use Vue when:**
+- Live dashboards, real-time polling, animated charts.
+- Drag & drop interfaces, multi-step wizards, file uploaders with progress.
+- Any UI that changes instantly without a page reload.
+- Rule: If the user interaction should feel instant, alive, or stateful → Vue.
+
+**Can both coexist in one Laravel project? YES — 3 setups:**
+1. **Inertia.js (full Vue)**: All pages are `.vue` components. Blade is only the root shell (`app.blade.php`). Used in `laravel-vue-app`. Mixing Blade pages is awkward here.
+2. **Hybrid (Blade + Vue components)**: Most pages are Blade, but specific pages mount a Vue component via `createApp().mount('#id')`. Very common and practical for real-world apps.
+3. **Full API separation**: Laravel = JSON API, Vue = separate frontend (Nuxt/Vite). Overkill for most projects.
+
+**Amirul's current project alignment:**
+- `sport-app` → Blade (CRUD, bookings, admin) ✅ correct choice.
+- `laravel-vue-app` → Inertia + Vue (learning SPA) ✅ correct choice.
+- `library-system` → Could do Hybrid or full Inertia depending on complexity.
+
+### Amirul's Understanding Level
+- Now clearly understands the use-case boundary between Blade and Vue.
+- Grasps that both can coexist; knows the 3 architectural patterns.
+- Ready to make informed decisions when starting new Laravel projects.
+
+---
+
+📖 *Diary entry complete - session preserved*
