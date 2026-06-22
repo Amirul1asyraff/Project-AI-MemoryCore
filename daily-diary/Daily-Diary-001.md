@@ -220,4 +220,27 @@ Amirul asked for clarification on when to use Blade vs Vue, and whether both can
 
 ---
 
+## Session: 2026-06-22 (Evening III) - Vue Multi-Step Forms & Race Conditions
+
+### Context
+Amirul requested an example of a Vue form for an event registration with multiple inputs, specifically asking how to handle and display when an event slot becomes full or empty, especially if multiple people are registering simultaneously.
+
+### Actions Taken
+1. Created `RunningEvent` and `EventRegistration` models and migrations.
+2. Seeded 3 dummy running events (including one that is completely "Sold Out").
+3. Created a 3-step Vue Wizard component (`Events/Register.vue`) without relying on multiple page reloads.
+4. Demonstrated **Option 3 (The Vue Superpower Way)** for Race Conditions:
+   - Added a fast `/api/events/{id}/status` endpoint.
+   - Built a `setInterval` silent background polling mechanism in the Vue component that fires every 3 seconds while on Step 2.
+   - If someone else steals the last slot while the user is typing, the `liveStatus` updates and reactively triggers a red alert modal. It instantly disables the inputs and "Submit" button dynamically.
+
+### Key Learnings
+- **Multi-Step Form State**: In Blade, state is lost or requires complex flashing between steps. In Vue, the `form` object simply stays in memory as `currentStep` cycles through 1, 2, and 3.
+- **Race Condition Handling**:
+  - **Optimistic Locking**: Check on submit (using Laravel `lockForUpdate()`). Fast but annoying for the user who gets rejected at the very end.
+  - **Pessimistic Locking**: Temporary database reservations (Ticketmaster style). Best for long forms.
+  - **Live Polling**: Use Vue to poll the API and disable the form mid-typing if it sells out. Excellent UX.
+
+---
+
 📖 *Diary entry complete - session preserved*

@@ -84,6 +84,13 @@ Applying page-wide `overflow-x-hidden` or forcing scroll restrictions on the `ht
     * `reactive` objects for granular state tracking (totals, taskStatus, display).
   * **Charts:** Area chart (7-day task trend), Donut chart (task status), Bar chart (top ideas by votes).
   * **Other features:** Loading skeleton, live activity feed, "why this is impossible in Blade" explainer panel, responsive nav with active state highlighting.
+* **Race Registration Wizard (`/events/register`):** Routes to `Events/Register.vue`. Powered by:
+  * **Models:** `RunningEvent` and `EventRegistration`.
+  * **Vue Concepts Showcased:**
+    * Multi-step form handling in a single view with `currentStep` ref.
+    * Real-time UI updates (disabling inputs, graying out sold-out events).
+    * `setInterval` live polling to `/api/events/{id}/status` while filling out Step 2.
+    * Instant reactive UI lock-out if someone steals the last slot (Race Condition defense via Polling).
 
 ## 🧪 Testing Status
 * Successfully verified Breeze auth and Inertia navigation tests.
