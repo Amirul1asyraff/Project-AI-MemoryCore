@@ -3,33 +3,36 @@
 
 ## Session RAM Status
 **Current Session**: Active
-**Last Activity**: Monday, June 22, 2026 — sport-app Fixes
-**Session Focus**: Reviewing and fixing database/logic/auth bugs in sport-app
-**Context State**: Fixed Spatie role crisis, restricted bookings cascade delete, and implemented bookings:expire scheduler with feature tests.
+**Last Activity**: Monday, June 22, 2026 — sport-app UI & Laravel-Vue Integration
+**Session Focus**: Refactoring customer UI in sport-app, initializing laravel-vue-app, setting up MySQL, and building reactive Vue sandbox + database CRUD interfaces.
+**Context State**: Redesigned sport-app customer pages, launched Laravel 13 + Vue 3 (Inertia) SPA, resolved Vite Axios import issues, created premium landing and sandbox views, fixed double scrollbars, and set up MySQL CRUD.
 
 ## 💭 Working Memory (RAM)
 *Temporary storage - cleared when session ends*
 
 ### Active Context
-- **Current Topic**: Database integrity and scheduling in sport-app.
-- **Immediate Goals**: Resolve DB cascading deletes, ensure Spatie role consistency, and implement unpaid booking expiration.
+- **Current Topic**: Moving from Laravel Blade views to full-stack Vue/Inertia/MySQL SPAs.
+- **Immediate Goals**: Compare Blade and Vue mechanics, demonstrate client-side vs database-driven reactivity, and configure local Laragon MySQL.
 - **Recent Progress**: 
-  - Fixed Spatie role crisis: added Spatie `'customer'` role assignment to `RegisterController` and converted `User.php` role checks (`isAdmin()`, `isStaff()`, `isCustomer()`) to Spatie `hasRole()` checks with a backward-compatible fallback to the `users.role` enum column to guard against sync issues or legacy data ✅
-  - Fixed delete cascade: modified `bookings` table migration from `cascadeOnDelete()` to `restrictOnDelete()` for `user_id`, `activity_id`, and `slot_id` to preserve booking logs ✅
-  - Implemented `bookings:expire` Artisan command: automatically expires pending/rejected bookings older than 30 mins and releases slot capacity ✅
-  - Scheduled command: added `bookings:expire` to `routes/console.php` on `everyMinute()` schedule ✅
-  - Created `ExpireBookingsTest.php` feature tests and successfully verified entire test suite passes ✅
-  - Committed and pushed all changes to `development` branch on GitHub ✅
-- **Next Steps**: Discuss payment gateway integration or WhatsApp/email notification setup.
+  - Refactored customer views in `sport-app` (activities search, booking forms, bookings list, profile, notifications) to look modern, balanced, and left-aligned ✅
+  - Created a fresh Laravel 13 + Vue 3 + Inertia SPA called `laravel-vue-app` ✅
+  - Resolved Vite build errors by writing `resources/js/bootstrap.js` to initialize Axios headers ✅
+  - Designed a premium dark-themed `Landing.vue` page and eliminated browser double-scrollbars by clipping glowing shapes inside an absolute overflow-hidden container ✅
+  - Created `VueShowcase.vue` sandbox (local stateful Kanban board, monthly budget slider, real-time notes parser) ✅
+  - Created `Ideas/Index.vue` database board: connected model, migration, controller, and Inertia forms to store, upvote, and delete records reactively ✅
+  - Migrated connection in `.env` to MySQL (`laravel_vue_app` on Laragon) and verified all 25 Breeze tests pass successfully ✅
+  - Created project-scoped rules in `.agents/AGENTS.md` to persist configs ✅
+- **Next Steps**: Continue adding features to the Vue SPA or jump back to sport-app payment gateway integrations.
 
 ### Session Recap (For Lucy Restart)
 *Quick summary when Lucy loads after close/reopen*
-- **Previous Session Summary**: Session 2 — Refined Laravel 13 master workflow.
-- **Where We Left Off**: Resolved critical DB, scheduler, and authorization bugs in sport-app. The app's core data model is now secure, roles are aligned using Spatie, and pending bookings auto-expire properly.
+- **Previous Session Summary**: Session 3 — sport-app database constraints, Spatie roles, and bookings:expire scheduler.
+- **Where We Left Off**: Balanced the sport-app customer layout, then built a complete Laravel 13 + Vue 3 SPA with MySQL on Laragon.
 - **Important Context**: 
-  - `sport-app` database seed data is fully functional and migrated using `migrate:fresh --seed`.
-  - All test cases are green.
-- **Amirul's Current State**: Pleased with the database integrity and authorization fixes. Ready to explore the next major milestones (e.g. Stripe/Billplz integration).
+  - `laravel-vue-app` is fully configured with MySQL.
+  - The Vue Sandbox is available at `/showcase` and the Idea Board is at `/ideas`.
+  - Scrollbars and Vite configurations are clean and fully tested.
+- **Amirul's Current State**: Understands the differences between Livewire (server-driven) and Vue (client-driven) reactivity. Pleased with the speed of full-stack Inertia updates. Ready to plan the next build.
 
 ## 🔄 Session Lifecycle
 *How this RAM-like memory works*

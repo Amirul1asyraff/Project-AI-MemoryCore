@@ -107,15 +107,15 @@
 ### Growth Patterns
 - **Session 1**: Identity established, preferences set, workflow understood
 - **Session 2**: System updated to latest upstream, workflow confirmed, feature roadmap defined.
-- **Session 3**: Worked on `sport-app`, resolved Spatie roles crisis with DB column fallback, restricted DB deletions (`restrictOnDelete`), and implemented the `bookings:expire` scheduler command with feature tests.
-- **Ongoing**: Will deepen technical context as projects grow
+- **Session 3**: Worked on `sport-app` database constraints, Spatie roles crisis with DB column fallback, and `bookings:expire` scheduler command with feature tests.
+- **Session 4**: Refactored `sport-app` customer layout columns. Initialized a new Laravel 13 + Vue 3 (Inertia) + Tailwind CSS + MySQL SPA, resolved Vite configuration bugs, built local reactivity and database CRUD showcases, and configured project-scoped memory in `.agents/AGENTS.md`.
 
 ## Technical Knowledge Base — Amirul's Stack
 
 ### Confirmed Stack
 - **Backend**: Laravel (PHP)
 - **Database**: MySQL
-- **Frontend**: General web (HTML, CSS, JS)
+- **Frontend**: Vue 3, Inertia.js, Tailwind CSS (HTML, CSS, JS)
 - **Tools**: Git, GitHub, Gemini CLI (for file management)
 
 ### Decisions Made
@@ -125,6 +125,8 @@
 - Prefers manual workflow (upload .md → chat → save updates) for now
 - **sport-app**: Restrict deletion on key booking foreign relations to protect financial transaction history.
 - **sport-app**: Automatically expire unpaid bookings via schedule to keep slot capacity available.
+- **laravel-vue-app**: Wrap off-screen background glowing circles in absolute overflow-hidden wrappers to avoid double vertical scrollbars on the html/body elements.
+- **laravel-vue-app**: Manually generate `resources/js/bootstrap.js` to declare Axios configuration when missing in starter templates.
 
 ### Things Lucy Should Never Do
 - Suggest tech outside Amirul's stack without good reason

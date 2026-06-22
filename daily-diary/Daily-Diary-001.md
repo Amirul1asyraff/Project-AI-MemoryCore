@@ -77,3 +77,33 @@ Library system specs now aligned with modern Laravel + Vue.js SPA best practices
 ---
 
 📖 *Diary entry complete - session preserved*
+
+---
+
+## Session: 2026-06-22 - Project Memory Organization & Save Action
+
+### Context
+Amirul requested saving the project context for the new `laravel-vue-app` and existing `sport-app` in the central memory repository `Project-AI-MemoryCore`, keeping individual project repositories clean and organized.
+
+### Actions Taken
+1. **Centralized Project Context Storage**:
+   - Created `Project/laravel-vue-app/PROJECT_CONTEXT.md` in `Project-AI-MemoryCore` containing:
+     - Technical stack details (Laravel 13, Vue 3, Inertia, Tailwind, MySQL).
+     - Database configuration for Laragon (`laravel_vue_app`).
+     - Key debugging solutions: Vite build/Axios bootstrap fix and absolute overflow double scrollbars fix.
+     - Routes description: `/` landing page, `/showcase` Vue sandbox, and `/ideas` database CRUD.
+   - Created `Project/sport-app/PROJECT_CONTEXT.md` in `Project-AI-MemoryCore` detailing:
+     - Financial booking delete constraints (`restrictOnDelete`).
+     - Unpaid bookings expiration console scheduler command (`bookings:expire`).
+     - Spatie permissions and role check DB column fallback.
+     - Modernized customer UI refactoring (left-aligned cards and consistent spacing).
+
+2. **Memory System Integration**:
+   - Updated relationship logs and verified RAM context remains fully aligned.
+
+### Technical Decisions
+- **Central Memory Model**: Rather than leaving `.agents/AGENTS.md` configurations inside individual workspace repositories where they can get cluttered or easily deleted, storing contexts centrally inside the `Project-AI-MemoryCore` folder under `Project/<project-name>` keeps project roots tidy and allows a single master repository to track all work.
+
+---
+
+📖 *Diary entry complete - session preserved*
