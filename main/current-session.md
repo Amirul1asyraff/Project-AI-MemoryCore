@@ -14,7 +14,7 @@
 - **Current Topic**: Database integrity and scheduling in sport-app.
 - **Immediate Goals**: Resolve DB cascading deletes, ensure Spatie role consistency, and implement unpaid booking expiration.
 - **Recent Progress**: 
-  - Fixed Spatie role crisis: added Spatie `'customer'` role assignment to `RegisterController` and converted `User.php` role checks (`isAdmin()`, `isStaff()`, `isCustomer()`) to Spatie `hasRole()` checks ✅
+  - Fixed Spatie role crisis: added Spatie `'customer'` role assignment to `RegisterController` and converted `User.php` role checks (`isAdmin()`, `isStaff()`, `isCustomer()`) to Spatie `hasRole()` checks with a backward-compatible fallback to the `users.role` enum column to guard against sync issues or legacy data ✅
   - Fixed delete cascade: modified `bookings` table migration from `cascadeOnDelete()` to `restrictOnDelete()` for `user_id`, `activity_id`, and `slot_id` to preserve booking logs ✅
   - Implemented `bookings:expire` Artisan command: automatically expires pending/rejected bookings older than 30 mins and releases slot capacity ✅
   - Scheduled command: added `bookings:expire` to `routes/console.php` on `everyMinute()` schedule ✅
