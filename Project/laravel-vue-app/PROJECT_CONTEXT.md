@@ -2,7 +2,7 @@
 *Persistent workspace memory and technical references for the Laravel Vue SPA project*
 
 ## 🎯 Project Overview
-* **Stack:** Laravel 13 + Vue 3 (Inertia.js) + Tailwind CSS + MySQL.
+* **Stack:** Laravel 13 + Vue 3 (Inertia.js) + Tailwind CSS + MySQL + Spatie Laravel MediaLibrary.
 * **Database Connection:** MySQL (`DB_CONNECTION=mysql`), Host: `127.0.0.1`, Port: `3306`, Database: `laravel_vue_app`, User: `root`, Password: `""` (empty) in Laragon.
 * **Vite Config:** Compiles Vue SPA assets. Runs hot-reloading dev server via `npm run dev` and builds production bundle via `npm run build`.
 
@@ -29,17 +29,49 @@ Applying page-wide `overflow-x-hidden` or forcing scroll restrictions on the `ht
      ```
   3. Ensure the outer container elements do not have conflicting overflow styles.
 
+### 3. Spatie MediaLibrary Configuration & Symbolic Link
+* **Storage Symlink:** To make media attachments publicly accessible in the browser, a symbolic link must be created from `public/storage` to `storage/app/public` via:
+  ```bash
+  php artisan storage:link
+  ```
+* **Non-Queued Media Conversions:** To avoid waiting for background queue workers in local environments (like Laragon), media conversions are registered to run immediately on-the-fly (`nonQueued()`):
+  ```php
+  public function registerMediaConversions(Media $media = null): void
+  {
+      $this->addMediaConversion('thumb')
+          ->width(300)
+          ->height(300)
+          ->fit(\Spatie\Image\Enums\Fit::Crop, 300, 300)
+          ->nonQueued();
+  }
+  ```
+
+### 4. Vue Real-time Upload Progress Bar (Axios)
+* **Axios custom handler:** Direct file uploads using Inertia can sometimes lack individual file progress details. Using window.axios.post with `onUploadProgress` allows tracking individual file percentages dynamically:
+  ```js
+  window.axios.post(route('tasks.media.store', task_id), formData, {
+      onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          queueItem.progress = percent;
+      }
+  })
+  ```
+
 ## 🗺️ Registered Routes & Pages
 * **Landing Page (`/`):** Routes to `Landing.vue` (Premium modern dark mode showcase).
-* **Vue Feature Showcase (`/showcase`):** Routes to `VueShowcase.vue`. Demonstrates:
-  * Client-side stateful Kanban board (drag-and-drop state).
-  * Monthly budget interactive slider.
-  * Real-time notes markdown parser.
-* **Ideas Board (`/ideas`):** Routes to `Ideas/Index.vue`. Connected to SQLite/MySQL database via:
-  * **Model:** `app/Models/Idea.php`
-  * **Migration:** `database/migrations/2026_06_22_042825_create_ideas_table.php` (fields: `id`, `title`, `description`, `votes`, `created_at`, `updated_at`)
-  * **Controller:** `app/Http/Controllers/IdeaController.php`
-  * **Functionality:** Create new ideas, upvote/downvote ideas, and delete ideas reactively through Inertia post/put/delete requests.
+* **Vue Feature Showcase (`/showcase`):** Routes to `VueShowcase.vue` (Local sandbox widgets).
+* **Ideas Board (`/ideas`):** Routes to `Ideas/Index.vue` (Simple voting board, MySQL CRUD).
+* **Kanban Task & Media Board (`/tasks`):** Routes to `Tasks/Index.vue`. Integrates:
+  * **Model:** `app/Models/Task.php` (implements `HasMedia`, uses `InteractsWithMedia`).
+  * **Controllers:** `app/Http/Controllers/TaskController.php` with:
+    * `index`: Maps tasks and returns associated Spatie media attachments (original URL & thumbnail conversion URL).
+    * `store`: Creates new Kanban cards.
+    * `update`: Shifts cards between statuses (`todo`, `in-progress`, `done`).
+    * `uploadMedia`: Handles Axios file drops and attaches them to task media collection.
+    * `deleteMedia`: Removes media attachments by ID.
+    * `destroy`: Deletes tasks and automatically wipes all associated Spatie media storage folders.
+  * **View features:** Modal overlay, drag-and-drop file uploader zone, upload queue progress bar animations, card image cover rendering, and zoom lightbox views.
 
 ## 🧪 Testing Status
-* Successfully ran Laravel Breeze authentication and routing tests. All 25 feature/unit tests passed against the local MySQL database.
+* Successfully verified Breeze auth and Inertia navigation tests.
+* Verified that Spatie MediaLibrary generates thumbnails and registers uploads locally without errors.

@@ -107,3 +107,44 @@ Amirul requested saving the project context for the new `laravel-vue-app` and ex
 ---
 
 📖 *Diary entry complete - session preserved*
+
+---
+
+## Session: 2026-06-22 (Afternoon) - Spatie Media Library & Dynamic Vue Uploader
+
+### Context
+Amirul asked about a major feature possible in Vue that is difficult in Blade. Proposed a dynamic drag-and-drop uploader with real-time progress tracking, lightbox previews, and card cover renders, powered by Spatie Media Library.
+
+### Actions Taken
+1. **Spatie Media Library Backend Installation & Setup**:
+   - Installed `spatie/laravel-medialibrary` package.
+   - Published and migrated the `media` table migration.
+   - Generated the storage symbolic link (`php artisan storage:link`).
+   - Configured `Task.php` model to implement `HasMedia` and use `InteractsWithMedia` trait.
+   - Configured automatic thumbnail conversions to fit 300x300 pixel crops dynamically on-the-fly (`fit()` and `nonQueued()`).
+
+2. **Backend Controllers & Routes**:
+   - Modified `TaskController.php` index to map task media attachment arrays (URLs, thumbnails, file names, and sizes).
+   - Created `uploadMedia` controller action utilizing request file pointers to attach dropped images to tasks.
+   - Created `deleteMedia` controller action to remove attachments from storage.
+   - Registered `/tasks/{task}/media` (POST) and `/media/{media}` (DELETE) endpoints in `routes/web.php`.
+
+3. **High-Fidelity Vue SPA Features**:
+   - Upgraded `Tasks/Index.vue` with an interactive task details modal.
+   - Implemented drop zone events (`dragover`, `dragleave`, `drop`) and file upload select inputs.
+   - Designed a reactive upload queue using Axios `onUploadProgress` callbacks to render real-time progress bars for multiple files concurrently.
+   - Added hover overlay cards for zoom-in lightboxes and trash removals.
+   - Modified cards to display a visual cover preview using the task's first media thumbnail.
+   - Integrated headers navigation in `Landing.vue`, `VueShowcase.vue`, and `Ideas/Index.vue`.
+
+4. **Git Operations & Verification**:
+   - Verified that Vite compiles assets perfectly (Vite build completed in 1.34s with zero errors).
+   - Committed changes to the `laravel-vue-app` repository.
+
+### Technical Decisions
+- **Non-Queued Image Processing**: Configured Spatie media conversions with `nonQueued()` to run synchronously. This avoids queue configuration issues during local sandbox development.
+- **Granular Axios Upload Handlers**: Leveraged window.axios directly rather than standard Inertia forms for multi-file drops to support concurrent progress monitoring for each file separately.
+
+---
+
+📖 *Diary entry complete - session preserved*
