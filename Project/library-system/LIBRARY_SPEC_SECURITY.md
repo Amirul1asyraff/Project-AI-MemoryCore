@@ -36,12 +36,12 @@ Session Configuration:
 - Secure flag (HTTPS only)
 - SameSite: Strict (prevent CSRF)
 
-Token Management (JWT):
-- Issued on login
-- Expiration: 1 hour
-- Refresh token: 7 days
-- Revoked on logout
-- Renewed automatically before expiration
+Session Management (Sanctum):
+- Stateful session cookie (HTTP-only, Secure, SameSite=Strict)
+- Session timeout: 8 hours (idle timeout: 1 hour)
+- Session ID regenerated on login
+- Invalidated on logout
+- CSRF token verified on all state-changing requests
 ```
 
 ### 1.2 Role-Based Access Control (RBAC)
@@ -478,32 +478,25 @@ Detection:
 
 ### 9.1 API Authentication
 
-#### JWT Token Security
+#### Sanctum SPA Authentication
 ```
-Token Configuration:
-- Algorithm: HS256 or RS256
-- Secret key: 256+ bits (generate with openssl)
-- Expiration: 1 hour (short-lived)
-- Refresh token: 7 days (long-lived)
+Session Configuration:
+- Laravel Sanctum stateful middleware
+- CSRF cookie issued before login: GET /sanctum/csrf-cookie
+- Login: POST /api/auth/login (sets session cookie)
+- All API requests verified via session + CSRF token
+- No manual token refresh needed — Sanctum handles sessions
 
 Implementation:
-HEADER: Authorization: Bearer {token}
+// Frontend must first fetch CSRF cookie
+axios.get('/sanctum/csrf-cookie').then(() => {
+  axios.post('/api/auth/login', credentials);
+});
 
-Token Structure:
-{
-  "iss": "library-api",
-  "sub": 1,  // user_id
-  "iat": 1704067200,
-  "exp": 1704070800,
-  "role": "member"
-}
-
-Refresh Flow:
-1. Access token expires
-2. Send refresh token
-3. Validate refresh token
-4. Issue new access token
-5. Optional: Issue new refresh token
+// Sanctum middleware in api.php routes
+Route::middleware('auth:sanctum')->group(function () {
+  // protected routes
+});
 ```
 
 ### 9.2 API Rate Limiting
@@ -516,7 +509,7 @@ Rate Limits by Role:
 - Admin: 10000 requests/hour
 
 Implementation:
-Route::middleware('auth:api', 'throttle:1000,60')
+Route::middleware('auth:sanctum', 'throttle:1000,60')
   ->group(function () {
     // Member routes
   });

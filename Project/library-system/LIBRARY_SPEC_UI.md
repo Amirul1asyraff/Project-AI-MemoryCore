@@ -20,7 +20,7 @@
 - Language toggle (top right)
 - All text in English AND Bahasa Malaysia
 - Consistent terminology in both languages
-- Right-to-left layout support (if needed for Malay)
+- Right-to-left layout support NOT needed (Bahasa Malaysia uses Latin script)
 
 ### 4. Non-Tech-Savvy Users
 - Icons with text labels
