@@ -314,7 +314,7 @@ Search Results: < 1 second
 
 ### Authentication & Authorization
 ```
-- JWT tokens for API
+- Sanctum session cookies for SPA authentication
 - Session cookies for web
 - RBAC (Role-Based Access Control)
 - Password reset via email

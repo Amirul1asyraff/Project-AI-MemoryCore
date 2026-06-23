@@ -195,7 +195,7 @@ Production Environment
 |-----------|--------|-----|
 | **Framework** | Laravel 11 | Strong ecosystem, excellent docs, rapid dev |
 | **Database** | MySQL | Reliable, proven, easy to backup/restore |
-| **Frontend** | Blade + Alpine.js | Lightweight, simple, Laravel-integrated |
+| **Frontend** | Vue.js 3 SPA | Reactive, fast, highly interactive UI |
 | **Authentication** | Laravel Breeze | Built-in, secure, minimal overhead |
 | **Notifications** | Queue system | Reliable, non-blocking |
 

@@ -216,8 +216,8 @@
                     ──────────────────────────────────────────
 Add/Edit Books       ✓       ✓          ✗          ✗       ✗
 Delete Books         ✓       ✗          ✗          ✗       ✗
-Check Out Books      ✓       ✗          ✓          ✗       ✗
-Check In Books       ✓       ✗          ✓          ✗       ✗
+Check Out Books      ✓       ✓          ✓          ✗       ✗
+Check In Books       ✓       ✓          ✓          ✗       ✗
 Renew Books          ✓       ✗          ✓          ✓       ✗
 Reserve Books        ✓       ✗          ✗          ✓       ✗
 View Fines           ✓       ✓          ✓          ✓       ✗
@@ -236,16 +236,15 @@ Search Catalog       ✓       ✓          ✓          ✓       ✓
 ```
 1. User logs in with username/password
 2. System validates credentials
-3. JWT token generated with role information
-4. Token stored in secure HTTP-only cookie
-5. Token expires after 8 hours (configurable)
-6. Refresh token for extended sessions
+3. Laravel Sanctum creates a stateful session
+4. CSRF token and session cookie stored securely in browser
+5. Session expires based on Laravel configuration (default 2 hours, extendable)
 ```
 
 ### Authorization Checks
 ```
 Every API request:
-1. Verify JWT token validity
+1. Verify Sanctum session cookie validity
 2. Check user status (active/suspended)
 3. Validate requested action against role
 4. Log access attempt

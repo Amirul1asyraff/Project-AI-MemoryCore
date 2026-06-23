@@ -104,7 +104,7 @@ CREATE TABLE books (
     dewey_decimal VARCHAR(20) COMMENT 'Dewey Decimal Classification',
     
     -- Physical Details
-    isbn_barcode VARCHAR(13),
+    cover_image VARCHAR(500) COMMENT 'Path to book cover image',
     call_number VARCHAR(50) COMMENT 'Library classification',
     language ENUM('en', 'ms', 'multilingual') DEFAULT 'en',
     
@@ -156,6 +156,7 @@ CREATE TABLE book_copies (
         DEFAULT 'available',
     
     acquisition_date DATE,
+    notes TEXT COMMENT 'Damage notes or condition remarks',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
@@ -185,10 +186,8 @@ CREATE TABLE borrowings (
     renewal_count INT DEFAULT 0,
     last_renewal_date DATETIME,
     
-    -- Fine Information
-    fine_amount DECIMAL(10, 2) DEFAULT 0.00,
-    fine_paid BOOLEAN DEFAULT FALSE,
-    fine_paid_at DATETIME,
+    -- Staff Audit
+    processed_by BIGINT UNSIGNED NULL COMMENT 'Staff who processed this transaction',
     
     -- Status
     status ENUM('active', 'returned', 'lost', 'damaged') DEFAULT 'active',
@@ -200,6 +199,7 @@ CREATE TABLE borrowings (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (book_copy_id) REFERENCES book_copies(id),
     FOREIGN KEY (book_id) REFERENCES books(id),
+    FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL,
     KEY idx_user (user_id),
     KEY idx_due_date (due_date),
     KEY idx_status (status),
@@ -219,6 +219,9 @@ CREATE TABLE reservations (
     -- Queue
     queue_position INT NOT NULL,
     
+    -- Assigned copy when status = 'ready'
+    book_copy_id BIGINT UNSIGNED NULL COMMENT 'Physical copy held for this reservation',
+    
     -- Dates
     reserved_at DATETIME NOT NULL,
     expires_at DATETIME COMMENT '7-day hold period',
@@ -237,6 +240,7 @@ CREATE TABLE reservations (
     
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (book_id) REFERENCES books(id),
+    FOREIGN KEY (book_copy_id) REFERENCES book_copies(id) ON DELETE SET NULL,
     KEY idx_book_queue (book_id, queue_position),
     KEY idx_user_reserved (user_id),
     KEY idx_status (status)
@@ -257,10 +261,14 @@ CREATE TABLE fines (
     fine_reason ENUM('overdue', 'damage', 'lost_book', 'other') NOT NULL,
     description TEXT,
     
-    -- Payment
+    -- Payment (NULL until payment is actually recorded)
     paid_amount DECIMAL(10, 2) DEFAULT 0.00,
-    payment_date DATETIME,
-    payment_method ENUM('cash', 'card', 'bank_transfer', 'waived') DEFAULT 'cash',
+    payment_date DATETIME NULL,
+    payment_method ENUM('cash', 'card', 'bank_transfer') NULL COMMENT 'Set only on payment',
+    
+    -- Waiver Audit Trail
+    waived_by BIGINT UNSIGNED NULL COMMENT 'Staff who approved waiver',
+    waiver_reason TEXT NULL COMMENT 'Mandatory reason for waiver',
     
     -- Status
     status ENUM('unpaid', 'partial', 'paid', 'waived', 'disputed') DEFAULT 'unpaid',
@@ -270,6 +278,7 @@ CREATE TABLE fines (
     
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (borrowing_id) REFERENCES borrowings(id),
+    FOREIGN KEY (waived_by) REFERENCES users(id) ON DELETE SET NULL,
     KEY idx_user (user_id),
     KEY idx_status (status)
 );
@@ -339,11 +348,16 @@ CREATE TABLE system_settings (
 {
   "default_borrowing_days": 21,
   "renewal_limit_per_book": 2,
+  "renewal_limit_senior": 3,
   "fine_per_day_overdue": 1.00,
+  "fine_senior_discount_percent": 50,
+  "fine_max_per_item": 50.00,
   "max_items_member": 5,
   "max_items_senior": 8,
   "max_items_student": 6,
   "reservation_hold_days": 7,
+  "reservation_hold_days_senior": 10,
+  "max_fine_before_suspension": 50.00,
   "system_language": "en",
   "email_notification_enabled": true,
   "barcode_format": "ean13"

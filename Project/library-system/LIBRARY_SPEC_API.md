@@ -4,7 +4,7 @@
 
 **Base URL:** `https://library.example.com/api`  
 **Version:** v1  
-**Authentication:** JWT Bearer Token  
+**Authentication:** Laravel Sanctum (Stateful Cookie)  
 **Response Format:** JSON  
 **Rate Limiting:** 100 requests/minute per user
 
@@ -25,7 +25,6 @@ Request:
 Response (200):
 {
   "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIs...",
   "user": {
     "id": 1,
     "name": "Amirul",
@@ -41,8 +40,6 @@ Response (200):
 Invalidate current session.
 
 ```json
-Headers: Authorization: Bearer {token}
-
 Response (200):
 {
   "success": true,
@@ -76,22 +73,7 @@ Response (201):
 }
 ```
 
-### POST `/auth/refresh`
-Refresh JWT token.
 
-```json
-Request:
-{
-  "refresh_token": "eyJhbGciOiJIUzI1NiIs..."
-}
-
-Response (200):
-{
-  "token": "new_jwt_token_here"
-}
-```
-
----
 
 ## Book Endpoints
 
