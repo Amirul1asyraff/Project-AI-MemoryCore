@@ -3,35 +3,30 @@
 
 ## Session RAM Status
 **Current Session**: Active
-**Last Activity**: Monday, June 22, 2026 (Evening) — Race Condition Polling + Multi-Step Forms
-**Session Focus**: Demonstrating a multi-step event registration wizard in Vue that handles concurrent race conditions using real-time API polling and reactive UI safeguarding.
-**Context State**: Built `/events/register` page showing how Vue maintains state between steps without reloads. Implemented a 3-second background polling interval on Step 2 that locks out the user and shows a bouncing red warning if another user steals the final event slot while they are typing.
+**Last Activity**: Tuesday, June 23, 2026 (Morning) — Git Training Presentation Audit & Workflow Clarification
+**Session Focus**: Reviewing Amirul's Git presentation for his seniors and clarifying the exact differences between various Git workflows.
+**Context State**: Audited `GIt  (1).pdf`. Advised Amirul to delete default Canva template slides, speed-run beginner commands, focus heavily on the Laravel cloning steps, and use the Git Workflows comparison to spark a senior-level discussion. Clarified Centralized vs Feature Branch vs Trunk-Based vs Git Flow vs Forking.
 
 ## 💭 Working Memory (RAM)
 *Temporary storage - cleared when session ends*
 
 ### Active Context
-- **Current Topic**: `laravel-vue-app` — Vue SPA Feature Showcase: Forms & Concurrency.
-- **Immediate Goals**: Demonstrate how Vue handles complex form states and race conditions better than Blade.
+- **Current Topic**: Knowledge Sharing / Mentorship (Git Workflows).
+- **Immediate Goals**: Help Amirul feel confident presenting Git standards to his senior team members.
 - **Recent Progress**:
-  - Built `/events/register` Multi-Step Wizard ✅
-    - Step 1: Event Selection with real-time "Sold Out" styling ✅
-    - Step 2: Runner Details with `setInterval` polling to `/api/events/{id}/status` ✅
-    - Step 3: Confetti Success Screen ✅
-  - Explained the 3 ways to handle Race Conditions ✅
-    - Optimistic Locking (Laravel `lockForUpdate()`)
-    - Pessimistic Locking (Temporary Pending Timers)
-    - Live UI Defense (Vue Polling - Implemented!)
-- **Next Steps**: Amirul is ready to start planning the Library Management System or add further complexities.
+  - Found and parsed `GIt  (1).pdf` from the Downloads folder ✅
+  - Audited the slides and provided a 5-point strategic feedback list ✅
+  - Simplified the confusing differences between 5 Git workflows ✅
+- **Next Steps**: Waiting for Amirul to confirm if he needs to practice the presentation, or if we are pivoting back to coding the Library Management System.
 
 ### Session Recap (For Lucy Restart)
 *Quick summary when Lucy loads after close/reopen*
-- **Previous Session Summary**: Session 5 — Built `/analytics` live dashboard with ApexCharts and discussed Blade vs Vue architecture theory.
-- **Where We Left Off**: Finished `/events/register` multi-step form, demonstrated live race-condition polling, ran `lucy save`.
+- **Previous Session Summary**: Session 5 — Vue SPA race condition polling and `/events/register` multi-step form.
+- **Where We Left Off**: Audited the Git Training PDF. Broke down the 5 Git workflows so Amirul can present them clearly to his seniors. Ran `lucy save`.
 - **Important Context**:
-  - `laravel-vue-app` now has 5 main pages: `/showcase`, `/ideas`, `/tasks`, `/analytics`, `/events/register`.
-  - Vue is proving extremely powerful for state retention and real-time interval polling.
-- **Amirul's Current State**: Understands race conditions and how to solve them using Laravel transactions vs Vue real-time polling. Fully grasps why multi-step forms are easier in Vue. Ready for the next major project or feature.
+  - Amirul is stepping up by doing a knowledge-sharing presentation assigned by his boss.
+  - The target audience is senior developers, so the strategy shifted from "teaching basics" to "facilitating a discussion on team workflow standards."
+- **Amirul's Current State**: Understands the different Git workflows perfectly now. Has a solid plan for his presentation. Ready for his next task.
 
 ## 🔄 Session Lifecycle
 *How this RAM-like memory works*
