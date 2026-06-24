@@ -88,13 +88,13 @@ KPI scores are computed as: `KPI weight × achievement score` → summed across 
 
 5-tier grading system (in order, lowest to highest):
 
-| # | Kategori         | Meaning           |
-| - | ---------------- | ----------------- |
-| 1 | Perlu Diperbaiki | Needs Improvement |
-| 2 | Memuaskan        | Satisfactory      |
-| 3 | Baik             | Good              |
-| 4 | Sangat Baik      | Very Good         |
-| 5 | Cemerlang        | Excellent         |
+| # | Kategori         | Meaning           | Score Range |
+| - | ---------------- | ----------------- | ----------- |
+| 1 | Perlu Diperbaiki | Needs Improvement | < 50        |
+| 2 | Memuaskan        | Satisfactory      | 50 – 59     |
+| 3 | Baik             | Good              | 60 – 75     |
+| 4 | Sangat Baik      | Very Good         | 76 – 89     |
+| 5 | Cemerlang        | Excellent         | 90 – 100    |
 
 ### Bell Curve Data (actual PNSB data — 91 staff total):
 
@@ -243,7 +243,7 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 | 9  | **Individual KPI Approval** | Ketua Pegawai Eksekutif (KPE / CEO) or Department Head approves individual KPIs                                            |
 | 10 | **Role Architecture**       | Hierarchy-driven (manager_id chain)                                                                                        |
 | 11 | **Rating Scale**            | Percentage-based (0–100%)                                                                                                 |
-| 12 | **Competency scoring**      | Manager sees self-rating first, then enters own rating — supervisor's rating is the final score (overrides, not averaged) |
+| 12 | **Appraisal score method**  | Manager directly overrides both KPI and Competency scores — no dispute or mediation path in-system. Manager is the higher authority; their score is always final. Staff self-rating is visible to manager for reference only. |
 | 13 | **KPI rejection flow**      | Rejected KPI → staff edits and resubmits — manager does not edit staff KPI directly                                      |
 
 ---
@@ -258,7 +258,7 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 
 | #  | Topic                                | Question                                                                                                                                                                                                                                                                                                                                                                                                                  | Status     |
 | -- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| B1 | **Score → Grade Boundary**    | What score range maps to each grade? e.g. 90–100% = Cemerlang, 75–89% = Sangat Baik? Without this the system cannot auto-assign grades.                                                                                                                                                                                                                                                                                 | 🔴 Pending |
+| ~~B1~~ | ~~Score → Grade Boundary~~ | ✅ Resolved — moved to Decided (C5). Grade ranges confirmed from PNSB Excel embedded image. | ✅ Done |
 | B2 | **KPI 3-Tier Score Formula**   | How does hitting each tier translate to a score? e.g. Threshold = 60%? Meet Target = 100%? Stretched = 120%? Can final KPI score exceed 100%?                                                                                                                                                                                                                                                                             | 🔴 Pending |
 | B3 | **Competency Scoring Method**  | How is self-rating + manager rating combined into one final competency score? See Section 11 for 5 method options with pros & cons.                                                                                                                                                                                                                                                                                       | 🔴 Pending |
 | B4 | **KPI Structure Per Category** | Do different employee categories have different KPI sets and BSC structure? Specifically: (1) Do Sokongan/Teknikal staff fill in a KPI form at all, or skip it entirely since their score is 100% Penilaian Keperibadian? (2) Do Eksekutif and KPE share the same KPI items or have different sets? (3) Does the BSC weighting (Financial 40%, Customer 30% etc.) apply to all categories or only those with KPI scoring? | 🔴 Pending |
@@ -294,6 +294,8 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 | C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions saved for audit trail.                                                                                                                        |
 | C3 | **ALP Role in Scoring Rules**    | Scoring splits per category (100% KPI / 80%+20% / 100% Competency) are formal ALP Board ketetapan — not HR or admin configurations. Changes require a new ALP resolution. Only Super Admin can update these in the system. |
 | C4 | **System Terminology**           | See Section 10 — terms finalised for all modules and UI labels.                                                                                                                                                            |
+| C5 | **Score → Grade Boundary**       | Confirmed from PNSB Excel embedded image: Cemerlang 90–100 / Sangat Baik 76–89 / Baik 60–75 / Memuaskan 50–59 / Perlu Diperbaiki < 50. System auto-assigns grade once final score is computed.                         |
+| C6 | **Manager Score Override (KPI)** | During appraisal, manager directly overrides the KPI score — no dispute or mediation path. Manager is the higher authority; their score is final. Staff cannot contest the manager's rating in-system.                     |
 
 ---
 

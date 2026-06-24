@@ -79,18 +79,12 @@ flowchart TD
         P4A -->|Eksekutif and Pengurusan Kanan\nALP ketetapan: 80% KPI plus 20% Competency| P4C[Pengurus - Manager Scores\n80% KPI plus 20% Penilaian Keperibadian]
         P4A -->|Sokongan and Teknikal\nALP ketetapan: 100% Competency| P4D[Pengurus - Manager Scores\nPenilaian Keperibadian Only - 100% weight]
 
-        P4B --> P4E[Manager Reviews Staff KPI Achievement\nvs Ambangan / Setuju / Lebihan\nThreshold / Meet Target / Stretched]
+        P4B --> P4E[Manager Directly Overrides KPI Score\nReviews Actual vs Ambangan / Setuju / Lebihan\nThreshold / Meet Target / Stretched\nManager score is FINAL — no dispute path]
         P4C --> P4E
         P4C --> P4F
-        P4D --> P4F[Manager Rates Penilaian Keperibadian\nStaff Self-Rating visible to Manager\nManager enters own rating\nManager rating is final score]
+        P4D --> P4F[Manager Directly Overrides Competency Score\nStaff Self-Rating visible to Manager\nManager enters own rating\nManager rating is FINAL — no dispute path]
 
-        P4E --> P4G{Score Disputed\nby Staff?}
-        P4G -->|✅ No Dispute| P4H[Initial Score Confirmed]
-        P4G -->|⚠️ Disputed| P4I[Escalate to Bahagian\nSumber Manusia - HR\nfor Mediation]
-        P4I --> P4J{HR Mediation Result}
-        P4J -->|Score Stands| P4H
-        P4J -->|Score Revised| P4H
-
+        P4E --> P4H[Score Confirmed\nManager Override Recorded]
         P4F --> P4H
     end
 
@@ -140,8 +134,8 @@ flowchart TD
     classDef approve fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
     classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
 
-    class P1C,P2D,P2G,P3D,P4A,P4G,P4J,P5C,P5I,P6B,P6E decision
-    class P1E,P1F,P2F,P2G,P2H,P2I,P4I,P5E,P5F,P5G,P6D,P6E reject
+    class P1C,P2D,P2G,P3D,P4A,P5C,P5I,P6B,P6E decision
+    class P1E,P1F,P2F,P2G,P2H,P2I,P5E,P5F,P5G,P6D,P6E reject
     class P1D,P2E,P4H,P5D,P5J,P6C approve
     class START,END terminal
 ```
@@ -169,6 +163,6 @@ flowchart TD
 | Company KPI | Ahli Lembaga Pengarah (ALP) | HR / Management | Revise & resubmit to ALP |
 | Individual KPI — Minor | Ketua Pegawai Eksekutif (KPE) / Ketua Bahagian | Staff revises independently | Revise & resubmit |
 | Individual KPI — Major | Ketua Pegawai Eksekutif (KPE) / Ketua Bahagian | Ketua Bahagian guides revision directly | Redo from start |
-| Score Dispute (Appraisal) | Staff disputes manager's rating | Bahagian Sumber Manusia (HR) mediates | HR final decision |
+| Score Override (Appraisal) | Manager overrides staff score directly | N/A — no in-system dispute path | Manager is final authority |
 | Bell Curve Off (Moderation) | Ketua Pegawai Eksekutif (KPE) finds distribution wrong | Ketua Bahagian adjusts grades | Recheck bell curve |
 | Final Grade Appeal | Staff rejects final grade | HR + Ketua Bahagian reviews formally | Revised or stands |
