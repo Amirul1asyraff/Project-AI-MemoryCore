@@ -118,14 +118,63 @@ KPI scores are computed as: `KPI weight × achievement score` → summed across 
 
 ### 👥 User & Organization Management
 
-- **Roles**:
-  1. **Super Admin**: Full system access, system configuration, user role assignment
-  2. **Admin — Bahagian Sumber Manusia (HR)**: Manages PNSB appraisal operations, receives KPI forms, runs moderation
-  3. **Ketua Pegawai Eksekutif (KPE / CEO)**: Approves individual KPIs, leads moderation, top-level view
-  4. **Ketua Bahagian / Jabatan (Department Head)**: Approves department staff KPIs, participates in moderation
-  5. **Kakitangan (Staff)**: Prepares own KPIs, self-assesses, views own results
+#### Organisational Hierarchy (Hierarki Organisasi)
 
-> **Role Architecture**: Hierarchy-driven — a Department Head is both reviewer (for their reports) and reviewee (reviewed by the Ketua Pegawai Eksekutif). The `manager_id` chain controls who reviews whom.
+```
+Ahli Lembaga Pengarah - ALP (Board of Directors)
+│  Sets KPI guidelines & scoring ketetapan. Approves Company KPI.
+│  Not a system user — decisions are configured by Super Admin.
+│
+└── Ketua Pegawai Eksekutif - KPE (Chief Executive Officer)
+    │  Approves all individual KPIs. Leads moderation. 100% KPI scoring.
+    │  Reviewed by: ALP (outside system)
+    │
+    ├── Ketua Bahagian / Jabatan (Department Head)
+    │   │  Approves dept staff KPIs. Participates in moderation.
+    │   │  Scoring: 80% Petunjuk Prestasi Utama (KPI) + 20% Kompetensi (Competencies)
+    │   │  Reviewed by: Ketua Pegawai Eksekutif (KPE)
+    │   │
+    │   ├── Eksekutif / Pengurusan Kanan (Executive / Senior Management)
+    │   │       Submits own KPIs. Self-assesses competencies.
+    │   │       Scoring: 80% Petunjuk Prestasi Utama (KPI) + 20% Kompetensi (Competencies)
+    │   │       Reviewed by: Ketua Bahagian
+    │   │
+    │   └── Kakitangan Sokongan / Teknikal (Support / Technical Staff)
+    │           No KPI form — Kompetensi (Competencies) only.
+    │           Scoring: 100% Kompetensi (Competencies)
+    │           Reviewed by: Ketua Bahagian
+    │
+    └── Bahagian Sumber Manusia - HR (Human Resources)
+            Administers the appraisal cycle. Runs moderation.
+            Not in the appraisal chain — system administrator role.
+```
+
+> ⚠️ Exact job titles per category still pending — see **D3** in Questions Tracker.
+
+---
+
+#### System Roles & Permissions (Peranan Sistem)
+
+| System Role                                   | Maps To                 | Key Permissions                                                                                                   |
+| --------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Super Pentadbir (Super Admin)**       | System owner / IT       | Full access, configure ALP ketetapan (scoring rules), manage all users                                            |
+| **Pentadbir Sumber Manusia (HR Admin)** | Bahagian Sumber Manusia | Open/close appraisal cycles, run moderation, view all scorecards, lock final grades                               |
+| **Ketua Pegawai Eksekutif (KPE)**       | CEO                     | Approve/reject all individual KPIs, lead final moderation round, view company-wide results                        |
+| **Ketua Bahagian (Department Head)**    | Dept Head               | Approve/reject dept staff KPIs, first moderation round, view dept results — also has own scorecard as a reviewee |
+| **Kakitangan (Staff)**                  | All other employees     | Submit own KPI form, submit self-assessment (Penilaian Kendiri), view own scorecard only                          |
+
+---
+
+#### Appraisal Review Chain (Rantaian Semakan)
+
+| Employee                      | KPI Approved By                               | Competency Rated By       | Moderation By        |
+| ----------------------------- | --------------------------------------------- | ------------------------- | -------------------- |
+| Ketua Pegawai Eksekutif (KPE) | Ahli Lembaga Pengarah (ALP) — outside system | — (no competency)        | ALP (outside system) |
+| Ketua Bahagian (Dept Head)    | Ketua Pegawai Eksekutif (KPE)                 | KPE rates them            | KPE + HR             |
+| Eksekutif / Pengurusan Kanan  | Ketua Bahagian                                | Ketua Bahagian rates them | Ketua Bahagian + KPE |
+| Sokongan / Teknikal           | — (no KPI form)                              | Ketua Bahagian rates them | Ketua Bahagian + KPE |
+
+> **Key design note**: `manager_id` on the `users` table drives the review chain — the system checks who your manager is to determine who reviews your KPI and competency. A Ketua Bahagian has `manager_id = KPE`. An Eksekutif has `manager_id = Ketua Bahagian`.
 
 ### 📚 KPI Library (BSC-Aligned)
 
@@ -207,44 +256,44 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 
 ### 🔴 Blockers (Must Decide First — Pending PNSB HR)
 
-| # | Topic | Question | Status |
-|---|---|---|---|
-| B1 | **Score → Grade Boundary** | What score range maps to each grade? e.g. 90–100% = Cemerlang, 75–89% = Sangat Baik? Without this the system cannot auto-assign grades. | 🔴 Pending |
-| B2 | **KPI 3-Tier Score Formula** | How does hitting each tier translate to a score? e.g. Threshold = 60%? Meet Target = 100%? Stretched = 120%? Can final KPI score exceed 100%? | 🔴 Pending |
-| B3 | **Competency Scoring Method** | How is self-rating + manager rating combined into one final competency score? See Section 11 for 5 method options with pros & cons. | 🔴 Pending |
+| #  | Topic                                | Question                                                                                                                                                                                                                                                                                                                                                                                                                  | Status     |
+| -- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| B1 | **Score → Grade Boundary**    | What score range maps to each grade? e.g. 90–100% = Cemerlang, 75–89% = Sangat Baik? Without this the system cannot auto-assign grades.                                                                                                                                                                                                                                                                                 | 🔴 Pending |
+| B2 | **KPI 3-Tier Score Formula**   | How does hitting each tier translate to a score? e.g. Threshold = 60%? Meet Target = 100%? Stretched = 120%? Can final KPI score exceed 100%?                                                                                                                                                                                                                                                                             | 🔴 Pending |
+| B3 | **Competency Scoring Method**  | How is self-rating + manager rating combined into one final competency score? See Section 11 for 5 method options with pros & cons.                                                                                                                                                                                                                                                                                       | 🔴 Pending |
 | B4 | **KPI Structure Per Category** | Do different employee categories have different KPI sets and BSC structure? Specifically: (1) Do Sokongan/Teknikal staff fill in a KPI form at all, or skip it entirely since their score is 100% Penilaian Keperibadian? (2) Do Eksekutif and KPE share the same KPI items or have different sets? (3) Does the BSC weighting (Financial 40%, Customer 30% etc.) apply to all categories or only those with KPI scoring? | 🔴 Pending |
 
 ---
 
 ### ⚠️ Needs Decision (Before That Module Is Built)
 
-| # | Topic | Question | Status |
-|---|---|---|---|
-| D1 | **Final Sign-off Layers** | After moderation, who locks the final grades — HR only, or does KPE also formally sign off? Affects number of approval states in the system. | ⚠️ TBC |
-| D2 | **Actual Competency Items** | What are PNSB's actual Core and Functional competency items and descriptions? Needed for DB seeding and appraisal form UI. | ⚠️ TBC |
+| #  | Topic                                  | Question                                                                                                                                                                                        | Status   |
+| -- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| D1 | **Final Sign-off Layers**        | After moderation, who locks the final grades — HR only, or does KPE also formally sign off? Affects number of approval states in the system.                                                   | ⚠️ TBC |
+| D2 | **Actual Competency Items**      | What are PNSB's actual Core and Functional competency items and descriptions? Needed for DB seeding and appraisal form UI.                                                                      | ⚠️ TBC |
 | D3 | **Employee Category Boundaries** | Which exact job titles fall under each category (KPE / Eksekutif → Pengurusan Kanan / Sokongan / Teknikal)? Needed to auto-assign the correct scoring template when a user account is created. | ⚠️ TBC |
-| D4 | **Subsidiary Handling** | Same system shared with anak syarikat, or separate instances? Affects overall multi-tenancy architecture decision upfront. | ⚠️ TBC |
-| D5 | **KPI Resubmission Limit** | Can staff resubmit a rejected KPI unlimited times, or is there a maximum number of attempts? | ⚠️ TBC |
+| D4 | **Subsidiary Handling**          | Same system shared with anak syarikat, or separate instances? Affects overall multi-tenancy architecture decision upfront.                                                                      | ⚠️ TBC |
+| D5 | **KPI Resubmission Limit**       | Can staff resubmit a rejected KPI unlimited times, or is there a maximum number of attempts?                                                                                                    | ⚠️ TBC |
 
 ---
 
 ### 🔵 KIV (Deferred — Later Phase)
 
-| # | Topic | Note |
-|---|---|---|
+| #  | Topic                                 | Note                                                                                                                   |
+| -- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | K1 | **Bell Curve Hard Enforcement** | Hard system cap vs soft guideline — deferred. Phase 1 shows a warning only; hard enforcement scoped to a later phase. |
-| K2 | **WhatsApp Integration** | Submission reminder notifications via WhatsApp — pending scope definition. |
+| K2 | **WhatsApp Integration**        | Submission reminder notifications via WhatsApp — pending scope definition.                                            |
 
 ---
 
 ### ✅ Decided (Locked — No Further Action Needed)
 
-| # | Topic | Decision |
-|---|---|---|
-| C1 | **KPI Rejection Flow** | Manager rejects with a written reason. Staff receives rejection + reason, edits and resubmits. Manager does not edit the KPI directly. |
-| C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions saved for audit trail. |
-| C3 | **ALP Role in Scoring Rules** | Scoring splits per category (100% KPI / 80%+20% / 100% Competency) are formal ALP Board ketetapan — not HR or admin configurations. Changes require a new ALP resolution. Only Super Admin can update these in the system. |
-| C4 | **System Terminology** | See Section 10 — terms finalised for all modules and UI labels. |
+| #  | Topic                                  | Decision                                                                                                                                                                                                                    |
+| -- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1 | **KPI Rejection Flow**           | Manager rejects with a written reason. Staff receives rejection + reason, edits and resubmits. Manager does not edit the KPI directly.                                                                                      |
+| C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions saved for audit trail.                                                                                                                        |
+| C3 | **ALP Role in Scoring Rules**    | Scoring splits per category (100% KPI / 80%+20% / 100% Competency) are formal ALP Board ketetapan — not HR or admin configurations. Changes require a new ALP resolution. Only Super Admin can update these in the system. |
+| C4 | **System Terminology**           | See Section 10 — terms finalised for all modules and UI labels.                                                                                                                                                            |
 
 ---
 
@@ -256,60 +305,60 @@ All UI labels, module names, and field names in the system must follow this conv
 
 ### Core Module Terms
 
-| Concept | System Label | Notes |
-|---|---|---|
-| KPI evaluation section | **Petunjuk Prestasi Utama (KPI)** | Use full Malay name — never just "KPI" alone as a section title |
-| Competency evaluation section | **Kompetensi (Competencies)** | Use "Competencies" — not "Penilaian Keperibadian" or "Self Assessment" in UI |
-| Balanced Scorecard framework | **Kad Skor Imbangan (BSC)** | Used as the structural framework label |
-| Overall appraisal form | **Borang Penilaian Prestasi (Performance Appraisal Form)** | |
-| Appraisal cycle | **Kitaran Penilaian (Appraisal Cycle)** | |
-| Self rating (by staff) | **Penilaian Kendiri (Self Assessment)** | Used inside the Competencies section |
-| Manager rating | **Penilaian Pengurus (Manager Assessment)** | Used inside the Competencies section |
-| Final score | **Skor Akhir (Final Score)** | |
-| Performance grade | **Kategori Prestasi (Performance Grade)** | |
+| Concept                       | System Label                                                     | Notes                                                                         |
+| ----------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| KPI evaluation section        | **Petunjuk Prestasi Utama (KPI)**                          | Use full Malay name — never just "KPI" alone as a section title              |
+| Competency evaluation section | **Kompetensi (Competencies)**                              | Use "Competencies" — not "Penilaian Keperibadian" or "Self Assessment" in UI |
+| Balanced Scorecard framework  | **Kad Skor Imbangan (BSC)**                                | Used as the structural framework label                                        |
+| Overall appraisal form        | **Borang Penilaian Prestasi (Performance Appraisal Form)** |                                                                               |
+| Appraisal cycle               | **Kitaran Penilaian (Appraisal Cycle)**                    |                                                                               |
+| Self rating (by staff)        | **Penilaian Kendiri (Self Assessment)**                    | Used inside the Competencies section                                          |
+| Manager rating                | **Penilaian Pengurus (Manager Assessment)**                | Used inside the Competencies section                                          |
+| Final score                   | **Skor Akhir (Final Score)**                               |                                                                               |
+| Performance grade             | **Kategori Prestasi (Performance Grade)**                  |                                                                               |
 
 ### BSC Perspective Labels
 
-| Malay | English (in brackets) |
-|---|---|
-| Kewangan | (Financial) |
-| Pelanggan | (Customer) |
-| Proses Dalaman | (Internal Business Process) |
-| Pembelajaran & Peningkatan | (Learning & Growth) |
+| Malay                      | English (in brackets)       |
+| -------------------------- | --------------------------- |
+| Kewangan                   | (Financial)                 |
+| Pelanggan                  | (Customer)                  |
+| Proses Dalaman             | (Internal Business Process) |
+| Pembelajaran & Peningkatan | (Learning & Growth)         |
 
 ### KPI Field Labels
 
-| Concept | System Label |
-|---|---|
-| KPI target — minimum | **Ambangan (Threshold)** |
-| KPI target — expected | **Sasaran (Meet Target)** |
-| KPI target — above expected | **Lebihan (Stretched)** |
-| Actual achievement | **Pencapaian Sebenar (Actual Achievement)** |
-| KPI weight (small) | **Pemberat Kecil (Sub-weight)** |
-| KPI weight (total per BSC) | **Pemberat Besar (BSC Weight)** |
-| Unit of measure | **Unit Pengukuran (Unit of Measure)** |
+| Concept                      | System Label                                      |
+| ---------------------------- | ------------------------------------------------- |
+| KPI target — minimum        | **Ambangan (Threshold)**                    |
+| KPI target — expected       | **Sasaran (Meet Target)**                   |
+| KPI target — above expected | **Lebihan (Stretched)**                     |
+| Actual achievement           | **Pencapaian Sebenar (Actual Achievement)** |
+| KPI weight (small)           | **Pemberat Kecil (Sub-weight)**             |
+| KPI weight (total per BSC)   | **Pemberat Besar (BSC Weight)**             |
+| Unit of measure              | **Unit Pengukuran (Unit of Measure)**       |
 
 ### Status Labels
 
-| Status | System Label |
-|---|---|
-| Draft / not submitted | **Draf (Draft)** |
-| Submitted for review | **Dikemukakan (Submitted)** |
-| Approved | **Diluluskan (Approved)** |
-| Rejected | **Ditolak (Rejected)** |
-| Locked / finalised | **Dikunci (Locked)** |
-| Under moderation | **Dalam Moderasi (Under Moderation)** |
-| Completed | **Selesai (Completed)** |
+| Status                | System Label                                |
+| --------------------- | ------------------------------------------- |
+| Draft / not submitted | **Draf (Draft)**                      |
+| Submitted for review  | **Dikemukakan (Submitted)**           |
+| Approved              | **Diluluskan (Approved)**             |
+| Rejected              | **Ditolak (Rejected)**                |
+| Locked / finalised    | **Dikunci (Locked)**                  |
+| Under moderation      | **Dalam Moderasi (Under Moderation)** |
+| Completed             | **Selesai (Completed)**               |
 
 ### Role Labels (as displayed in UI)
 
-| Role | System Label |
-|---|---|
-| CEO | **Ketua Pegawai Eksekutif (KPE)** |
-| Department Head | **Ketua Bahagian (Department Head)** |
-| Staff | **Kakitangan (Staff)** |
-| HR Admin | **Pentadbir Sumber Manusia (HR Admin)** |
-| Super Admin | **Super Pentadbir (Super Admin)** |
+| Role            | System Label                                  |
+| --------------- | --------------------------------------------- |
+| CEO             | **Ketua Pegawai Eksekutif (KPE)**       |
+| Department Head | **Ketua Bahagian (Department Head)**    |
+| Staff           | **Kakitangan (Staff)**                  |
+| HR Admin        | **Pentadbir Sumber Manusia (HR Admin)** |
+| Super Admin     | **Super Pentadbir (Super Admin)**       |
 
 ---
 
