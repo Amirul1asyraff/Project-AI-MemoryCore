@@ -211,7 +211,7 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 |---|---|---|---|
 | B1 | **Score → Grade Boundary** | What score range maps to each grade? e.g. 90–100% = Cemerlang, 75–89% = Sangat Baik? Without this the system cannot auto-assign grades. | 🔴 Pending |
 | B2 | **KPI 3-Tier Score Formula** | How does hitting each tier translate to a score? e.g. Threshold = 60%? Meet Target = 100%? Stretched = 120%? Can final KPI score exceed 100%? | 🔴 Pending |
-| B3 | **Competency Scoring Method** | How is self-rating + manager rating combined into one final competency score? See Section 10 for 5 method options with pros & cons. | 🔴 Pending |
+| B3 | **Competency Scoring Method** | How is self-rating + manager rating combined into one final competency score? See Section 11 for 5 method options with pros & cons. | 🔴 Pending |
 | B4 | **KPI Structure Per Category** | Do different employee categories have different KPI sets and BSC structure? Specifically: (1) Do Sokongan/Teknikal staff fill in a KPI form at all, or skip it entirely since their score is 100% Penilaian Keperibadian? (2) Do Eksekutif and KPE share the same KPI items or have different sets? (3) Does the BSC weighting (Financial 40%, Customer 30% etc.) apply to all categories or only those with KPI scoring? | 🔴 Pending |
 
 ---
@@ -244,8 +244,76 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 | C1 | **KPI Rejection Flow** | Manager rejects with a written reason. Staff receives rejection + reason, edits and resubmits. Manager does not edit the KPI directly. |
 | C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions saved for audit trail. |
 | C3 | **ALP Role in Scoring Rules** | Scoring splits per category (100% KPI / 80%+20% / 100% Competency) are formal ALP Board ketetapan — not HR or admin configurations. Changes require a new ALP resolution. Only Super Admin can update these in the system. |
+| C4 | **System Terminology** | See Section 10 — terms finalised for all modules and UI labels. |
 
-## 10. Competency Scoring Method — Options Comparison
+---
+
+## 10. System Terminology (Finalised)
+
+All UI labels, module names, and field names in the system must follow this convention.
+
+> **Language rule**: Malay label first, English in brackets. Applied consistently across all screens, forms, buttons, and reports.
+
+### Core Module Terms
+
+| Concept | System Label | Notes |
+|---|---|---|
+| KPI evaluation section | **Petunjuk Prestasi Utama (KPI)** | Use full Malay name — never just "KPI" alone as a section title |
+| Competency evaluation section | **Kompetensi (Competencies)** | Use "Competencies" — not "Penilaian Keperibadian" or "Self Assessment" in UI |
+| Balanced Scorecard framework | **Kad Skor Imbangan (BSC)** | Used as the structural framework label |
+| Overall appraisal form | **Borang Penilaian Prestasi (Performance Appraisal Form)** | |
+| Appraisal cycle | **Kitaran Penilaian (Appraisal Cycle)** | |
+| Self rating (by staff) | **Penilaian Kendiri (Self Assessment)** | Used inside the Competencies section |
+| Manager rating | **Penilaian Pengurus (Manager Assessment)** | Used inside the Competencies section |
+| Final score | **Skor Akhir (Final Score)** | |
+| Performance grade | **Kategori Prestasi (Performance Grade)** | |
+
+### BSC Perspective Labels
+
+| Malay | English (in brackets) |
+|---|---|
+| Kewangan | (Financial) |
+| Pelanggan | (Customer) |
+| Proses Dalaman | (Internal Business Process) |
+| Pembelajaran & Peningkatan | (Learning & Growth) |
+
+### KPI Field Labels
+
+| Concept | System Label |
+|---|---|
+| KPI target — minimum | **Ambangan (Threshold)** |
+| KPI target — expected | **Sasaran (Meet Target)** |
+| KPI target — above expected | **Lebihan (Stretched)** |
+| Actual achievement | **Pencapaian Sebenar (Actual Achievement)** |
+| KPI weight (small) | **Pemberat Kecil (Sub-weight)** |
+| KPI weight (total per BSC) | **Pemberat Besar (BSC Weight)** |
+| Unit of measure | **Unit Pengukuran (Unit of Measure)** |
+
+### Status Labels
+
+| Status | System Label |
+|---|---|
+| Draft / not submitted | **Draf (Draft)** |
+| Submitted for review | **Dikemukakan (Submitted)** |
+| Approved | **Diluluskan (Approved)** |
+| Rejected | **Ditolak (Rejected)** |
+| Locked / finalised | **Dikunci (Locked)** |
+| Under moderation | **Dalam Moderasi (Under Moderation)** |
+| Completed | **Selesai (Completed)** |
+
+### Role Labels (as displayed in UI)
+
+| Role | System Label |
+|---|---|
+| CEO | **Ketua Pegawai Eksekutif (KPE)** |
+| Department Head | **Ketua Bahagian (Department Head)** |
+| Staff | **Kakitangan (Staff)** |
+| HR Admin | **Pentadbir Sumber Manusia (HR Admin)** |
+| Super Admin | **Super Pentadbir (Super Admin)** |
+
+---
+
+## 11. Competency Scoring Method — Options Comparison
 
 When a staff member submits their Penilaian Keperibadian (Competency Assessment), there are **two ratings** on the table — the staff's self-rating and the manager's rating. The question is: **how does the system compute the final competency score?**
 
