@@ -43,6 +43,7 @@ This is the most critical design decision — scoring formula differs **per empl
 > Key insight: Support/Technical staff are evaluated purely on personality/competency — no KPI scoring.
 > CEO is purely KPI-driven.
 > Middle layer (Executive to Senior Management) is the hybrid 80/20 split.
+> ⚠️ **Important**: These scoring splits are formal **ketetapan ALP (ALP Board resolutions)** — not HR or system admin preferences. They can only be changed through a new ALP Board decision. In the system, only Super Admin can modify these values, and only when instructed by an ALP resolution.
 
 ---
 
@@ -77,7 +78,7 @@ KPI scores are computed as: `KPI weight × achievement score` → summed across 
 5. **KPI lengkap dikemukakan kepada HR** — Completed KPI forms submitted to Bahagian Sumber Manusia (HR)
 6. **Perlaksanaan KPI (Januari - Disember)** — KPIs are live and tracked for the full year
 7. **KPI lengkap dikemukakan kepada HR untuk penilaian** — Year-end: completed KPIs resubmitted to Bahagian Sumber Manusia (HR) for appraisal
-8. **Sesi penilaian prestasi** — Appraisal session based on Ahli Lembaga Pengarah (ALP)-set guidelines
+8. **Sesi penilaian prestasi** — Appraisal session conducted by supervisors/managers, strictly following Ahli Lembaga Pengarah (ALP) formal guidelines and ketetapan (Board resolutions). The scoring splits per employee category (100% KPI / 80%+20% / 100% Competency) are ALP Board decisions — not HR configurations. Any change to these weights requires a new ALP resolution before the system can be updated.
 9. **Sesi Moderasi** — Moderation session by Department Head and Ketua Pegawai Eksekutif (KPE / CEO)
 10. **Kategori Pemarkahan** — Final grade assignment
 
@@ -202,43 +203,47 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 
 > Legend: 🔴 **BLOCKER** — must decide before dev starts | ⚠️ **NEEDS DECISION** — needed before that module is built | 🔵 **KIV** — deferred to later phase | ✅ **DECIDED** — confirmed and locked
 
-### 🔴 Blockers (Must Decide First)
+---
 
-| #  | Topic                               | Question                                                                                                                                | Status             |
-| -- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| B1 | **Score → Grade Boundary**   | What score range maps to each grade? (e.g. 90–100% = Cemerlang, 75–89% = Sangat Baik, etc.)                                           | 🔴 Pending PNSB HR |
-| B2 | **KPI 3-Tier Score Formula**  | How does achieving each tier translate to a score? (e.g. Threshold = 60%, Meet Target = 100%, Stretched = 120%?) Can score exceed 100%? | 🔴 Pending PNSB HR |
-| B3 | **Competency Scoring Method** | Which method to combine self-rating + manager rating into final score? See Section 10 for full options comparison.                      | 🔴 Pending PNSB HR |
+### 🔴 Blockers (Must Decide First — Pending PNSB HR)
+
+| # | Topic | Question | Status |
+|---|---|---|---|
+| B1 | **Score → Grade Boundary** | What score range maps to each grade? e.g. 90–100% = Cemerlang, 75–89% = Sangat Baik? Without this the system cannot auto-assign grades. | 🔴 Pending |
+| B2 | **KPI 3-Tier Score Formula** | How does hitting each tier translate to a score? e.g. Threshold = 60%? Meet Target = 100%? Stretched = 120%? Can final KPI score exceed 100%? | 🔴 Pending |
+| B3 | **Competency Scoring Method** | How is self-rating + manager rating combined into one final competency score? See Section 10 for 5 method options with pros & cons. | 🔴 Pending |
+| B4 | **KPI Structure Per Category** | Do different employee categories have different KPI sets and BSC structure? Specifically: (1) Do Sokongan/Teknikal staff fill in a KPI form at all, or skip it entirely since their score is 100% Penilaian Keperibadian? (2) Do Eksekutif and KPE share the same KPI items or have different sets? (3) Does the BSC weighting (Financial 40%, Customer 30% etc.) apply to all categories or only those with KPI scoring? | 🔴 Pending |
 
 ---
 
 ### ⚠️ Needs Decision (Before That Module Is Built)
 
-| #  | Topic                                  | Question                                                                                                                                                 | Status   |
-| -- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| D1 | **Final Sign-off Layers**        | After moderation, who locks the final grades — HR only, or does KPE also sign off?                                                                      | ⚠️ TBC |
-| D2 | **Actual Competency Items**      | What are PNSB's actual Core and Functional competency items? Needed for DB seeding and appraisal form UI.                                                | ⚠️ TBC |
-| D3 | **Employee Category Boundaries** | Which exact job titles fall under each category (CEO / Eksekutif → Pengurusan Kanan / Sokongan / Teknikal)? Needed for auto-assigning scoring template. | ⚠️ TBC |
-| D4 | **Subsidiary Handling**          | Same system or separate instances for anak syarikat (subsidiaries)? Affects overall multi-tenancy architecture.                                          | ⚠️ TBC |
-| D5 | **KPI Resubmission Limit**       | Can staff resubmit a rejected KPI unlimited times, or is there a maximum attempt limit?                                                                  | ⚠️ TBC |
+| # | Topic | Question | Status |
+|---|---|---|---|
+| D1 | **Final Sign-off Layers** | After moderation, who locks the final grades — HR only, or does KPE also formally sign off? Affects number of approval states in the system. | ⚠️ TBC |
+| D2 | **Actual Competency Items** | What are PNSB's actual Core and Functional competency items and descriptions? Needed for DB seeding and appraisal form UI. | ⚠️ TBC |
+| D3 | **Employee Category Boundaries** | Which exact job titles fall under each category (KPE / Eksekutif → Pengurusan Kanan / Sokongan / Teknikal)? Needed to auto-assign the correct scoring template when a user account is created. | ⚠️ TBC |
+| D4 | **Subsidiary Handling** | Same system shared with anak syarikat, or separate instances? Affects overall multi-tenancy architecture decision upfront. | ⚠️ TBC |
+| D5 | **KPI Resubmission Limit** | Can staff resubmit a rejected KPI unlimited times, or is there a maximum number of attempts? | ⚠️ TBC |
 
 ---
 
 ### 🔵 KIV (Deferred — Later Phase)
 
-| #  | Topic                            | Note                                                                                                                       |
-| -- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| K1 | **Bell Curve Enforcement** | Hard system cap vs soft guideline — deferred. Phase 1 will show a warning only; hard enforcement scoped to a later phase. |
-| K2 | **WhatsApp Integration**   | Submission reminder notifications via WhatsApp — pending scope.                                                           |
+| # | Topic | Note |
+|---|---|---|
+| K1 | **Bell Curve Hard Enforcement** | Hard system cap vs soft guideline — deferred. Phase 1 shows a warning only; hard enforcement scoped to a later phase. |
+| K2 | **WhatsApp Integration** | Submission reminder notifications via WhatsApp — pending scope definition. |
 
 ---
 
-### ✅ Decided (Locked)
+### ✅ Decided (Locked — No Further Action Needed)
 
-| #  | Topic                                  | Decision                                                                                                                       |
-| -- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| C1 | **KPI Rejection Flow**           | Manager rejects with a written reason. Staff receives rejection + reason, edits and resubmits. Manager does not edit directly. |
-| C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions are saved.                                       |
+| # | Topic | Decision |
+|---|---|---|
+| C1 | **KPI Rejection Flow** | Manager rejects with a written reason. Staff receives rejection + reason, edits and resubmits. Manager does not edit the KPI directly. |
+| C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions saved for audit trail. |
+| C3 | **ALP Role in Scoring Rules** | Scoring splits per category (100% KPI / 80%+20% / 100% Competency) are formal ALP Board ketetapan — not HR or admin configurations. Changes require a new ALP resolution. Only Super Admin can update these in the system. |
 
 ## 10. Competency Scoring Method — Options Comparison
 

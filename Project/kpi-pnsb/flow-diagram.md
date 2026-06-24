@@ -71,15 +71,18 @@ flowchart TD
     P3G --> PHASE4
 
     %% ─────────────────────────────────────────
-    subgraph PHASE4 ["📊 Phase 4 — Appraisal Session"]
-        P4A{Employee Category?}
-        P4A -->|Ketua Pegawai Eksekutif - KPE| P4B[Score: 100% KPI]
-        P4A -->|Eksekutif and Pengurusan Kanan\nExecutive and Senior Management| P4C[Score: 80% KPI\n+ 20% Penilaian Keperibadian\nCompetency]
-        P4A -->|Sokongan and Teknikal\nSupport and Technical| P4D[Score: 100% Penilaian Keperibadian\nPersonality Assessment]
+    subgraph PHASE4 ["📊 Phase 4 — Sesi Penilaian Prestasi (Appraisal Session)"]
+        P4PRE[Appraisal conducted under\nAhli Lembaga Pengarah - ALP\nformal guidelines and ketetapan\nScoring rules are ALP Board decisions\nnot system defaults] --> P4A
 
-        P4B --> P4E[Pengurus - Manager Reviews\nKPI Achievement vs\nAmbangan / Setuju / Lebihan\nThreshold / Meet / Stretched]
+        P4A{Employee Category?}
+        P4A -->|Ketua Pegawai Eksekutif - KPE\nALP ketetapan: 100% KPI| P4B[Pengurus - Manager Scores\nKPI Only - 100% weight]
+        P4A -->|Eksekutif and Pengurusan Kanan\nALP ketetapan: 80% KPI plus 20% Competency| P4C[Pengurus - Manager Scores\n80% KPI plus 20% Penilaian Keperibadian]
+        P4A -->|Sokongan and Teknikal\nALP ketetapan: 100% Competency| P4D[Pengurus - Manager Scores\nPenilaian Keperibadian Only - 100% weight]
+
+        P4B --> P4E[Manager Reviews Staff KPI Achievement\nvs Ambangan / Setuju / Lebihan\nThreshold / Meet Target / Stretched]
         P4C --> P4E
-        P4D --> P4F[Pengurus - Manager Rates\nPenilaian Keperibadian\nSelf-Rating vs Manager Rating]
+        P4C --> P4F
+        P4D --> P4F[Manager Rates Penilaian Keperibadian\nStaff Self-Rating visible to Manager\nManager enters own rating\nManager rating is final score]
 
         P4E --> P4G{Score Disputed\nby Staff?}
         P4G -->|✅ No Dispute| P4H[Initial Score Confirmed]
