@@ -210,21 +210,26 @@ Ahli Lembaga Pengarah - ALP (Board of Directors)
 
 ---
 
-## 7. Database Schema (High-Level)
+## 7. Database Schema
 
-```
-users                   (id, name, category, manager_id, department_id, job_title)
-appraisal_cycles        (id, year, status: draft/active/appraisal/moderation/closed)
-bsc_perspectives        (id, name, weight)                              -- 4 fixed perspectives
-kpis                    (id, title, bsc_perspective_id, uom, level: company/dept/individual)
-scorecard_templates     (id, category, kpi_weight, competency_weight)   -- per employee category
-scorecards              (id, user_id, cycle_id, template_id, status, final_score, grade)
-scorecard_kpis          (scorecard_id, kpi_id, bsc_weight, kpi_weight, threshold, meet_target, stretched, actual, score)
-competency_items        (id, title, description, type: core/functional)
-scorecard_competencies  (scorecard_id, competency_id, self_rating, manager_rating, final_rating)
-bell_curve_targets      (cycle_id, grade_category, target_count, target_pct)
-moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, moderated_by, notes)
-```
+> Full DB design in `db-design.md`. Tables summary:
+
+| Table | Purpose |
+|---|---|
+| `departments` | Org structure with parent hierarchy |
+| `users` | Staff, roles, category, manager_id chain |
+| `appraisal_cycles` | Annual cycle with status progression |
+| `bsc_perspectives` | 4 fixed BSC perspectives with weights (ALP ketetapan) |
+| `kpis` | KPI library — company / dept / individual level |
+| `scorecard_templates` | Scoring formula per employee category (ALP ketetapan) |
+| `scorecards` | One per user per cycle — tracks status, scores, grade |
+| `scorecard_kpis` | KPI targets & achievements per scorecard |
+| `scorecard_competencies` | Competency self + manager ratings per scorecard |
+| `competency_items` | PNSB competency items (Core + Functional) |
+| `bell_curve_targets` | Target distribution per cycle per grade |
+| `moderation_logs` | MOD1 / MOD2 grade changes audit |
+| `score_overrides` | Manager override audit trail |
+| `scorecard_status_logs` | Full scorecard status change history |
 
 ---
 
@@ -243,8 +248,7 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 | 9  | **Individual KPI Approval** | Ketua Pegawai Eksekutif (KPE / CEO) or Department Head approves individual KPIs                                            |
 | 10 | **Role Architecture**       | Hierarchy-driven (manager_id chain)                                                                                        |
 | 11 | **Rating Scale**            | Percentage-based (0–100%)                                                                                                 |
-| 12 | **Appraisal score method**  | Manager directly overrides both KPI and Competency scores — no dispute or mediation path in-system. Manager is the higher authority; their score is always final. Staff self-rating is visible to manager for reference only. |
-| 13 | **KPI rejection flow**      | Rejected KPI → staff edits and resubmits — manager does not edit staff KPI directly                                      |
+| 12 | **Appraisal score method**  | Manager directly overrides both KPI and Competency scores submitted by employee — no rejection back to employee, no resubmission. Manager edits score in-system. Staff self-rating is reference only. Manager is final authority. |
 
 ---
 
@@ -259,7 +263,7 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 | #  | Topic                                | Question                                                                                                                                                                                                                                                                                                                                                                                                                  | Status     |
 | -- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | ~~B1~~ | ~~Score → Grade Boundary~~ | ✅ Resolved — moved to Decided (C5). Grade ranges confirmed from PNSB Excel embedded image. | ✅ Done |
-| B2 | **KPI 3-Tier Score Formula**   | How does hitting each tier translate to a score? e.g. Threshold = 60%? Meet Target = 100%? Stretched = 120%? Can final KPI score exceed 100%?                                                                                                                                                                                                                                                                             | 🔴 Pending |
+| ~~B2~~ | ~~KPI 3-Tier Score Formula~~ | ✅ Resolved — moved to Decided (C7). Tier mapping confirmed from PNSB KPI1 Excel data. | ✅ Done |
 | B3 | **Competency Scoring Method**  | How is self-rating + manager rating combined into one final competency score? See Section 11 for 5 method options with pros & cons.                                                                                                                                                                                                                                                                                       | 🔴 Pending |
 | B4 | **KPI Structure Per Category** | Do different employee categories have different KPI sets and BSC structure? Specifically: (1) Do Sokongan/Teknikal staff fill in a KPI form at all, or skip it entirely since their score is 100% Penilaian Keperibadian? (2) Do Eksekutif and KPE share the same KPI items or have different sets? (3) Does the BSC weighting (Financial 40%, Customer 30% etc.) apply to all categories or only those with KPI scoring? | 🔴 Pending |
 
@@ -273,7 +277,6 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 | D2 | **Actual Competency Items**      | What are PNSB's actual Core and Functional competency items and descriptions? Needed for DB seeding and appraisal form UI.                                                                      | ⚠️ TBC |
 | D3 | **Employee Category Boundaries** | Which exact job titles fall under each category (KPE / Eksekutif → Pengurusan Kanan / Sokongan / Teknikal)? Needed to auto-assign the correct scoring template when a user account is created. | ⚠️ TBC |
 | D4 | **Subsidiary Handling**          | Same system shared with anak syarikat, or separate instances? Affects overall multi-tenancy architecture decision upfront.                                                                      | ⚠️ TBC |
-| D5 | **KPI Resubmission Limit**       | Can staff resubmit a rejected KPI unlimited times, or is there a maximum number of attempts?                                                                                                    | ⚠️ TBC |
 
 ---
 
@@ -290,16 +293,76 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 
 | #  | Topic                                  | Decision                                                                                                                                                                                                                    |
 | -- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1 | **KPI Rejection Flow**           | Manager rejects with a written reason. Staff receives rejection + reason, edits and resubmits. Manager does not edit the KPI directly.                                                                                      |
+| C1 | **Manager Score Override**       | Manager directly overrides KPI and Competency scores submitted by employee — no rejection back to employee, no resubmission flow. Manager edits score in-system. Staff self-rating is reference only. Manager is final authority. |
 | C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions saved for audit trail.                                                                                                                        |
 | C3 | **ALP Role in Scoring Rules**    | Scoring splits per category (100% KPI / 80%+20% / 100% Competency) are formal ALP Board ketetapan — not HR or admin configurations. Changes require a new ALP resolution. Only Super Admin can update these in the system. |
 | C4 | **System Terminology**           | See Section 10 — terms finalised for all modules and UI labels.                                                                                                                                                            |
 | C5 | **Score → Grade Boundary**       | Confirmed from PNSB Excel embedded image: Cemerlang 90–100 / Sangat Baik 76–89 / Baik 60–75 / Memuaskan 50–59 / Perlu Diperbaiki < 50. System auto-assigns grade once final score is computed.                         |
 | C6 | **Manager Score Override (KPI)** | During appraisal, manager directly overrides the KPI score — no dispute or mediation path. Manager is the higher authority; their score is final. Staff cannot contest the manager's rating in-system.                     |
+| C7 | **KPI 3-Tier Score Formula**     | Confirmed from PNSB KPI1 Excel: Threshold (Ambangan) = 60, Meet Target (Setuju) = 80, Stretched (Lebihan) = 100, Below Threshold = 0. Hard cap at 100 — exceeding Stretched does not push score above 100. Formula: `Skor = (Pencapaian Sebenar / 100) × Jumlah Kecil Pemberat`. See `files/kpi1-excel-data.md` for full verification. |
 
 ---
 
-## 10. System Terminology (Finalised)
+## 10. Change Impact Notes
+
+> **Build strategy**: Flow and DB design follow current ALP guidelines (locked architecture). These notes flag exactly what changes if a pending decision comes back differently — so we don't re-think from scratch.
+
+---
+
+### If B4 changes — Sokongan/Teknikal also fill KPI form
+
+**Current assumption**: Sokongan/Teknikal skip KPI form entirely (100% Competency, 0% KPI).
+
+**If HR confirms they DO fill KPI form:**
+
+| What Changes | Impact |
+|---|---|
+| `scorecard_kpis` | Create rows for Sokongan/Teknikal scorecards too — they fill targets & achievements |
+| `kpis` table | Add `category_scope` column to assign different KPI sets per category |
+| KPI form routing | Show KPI form to ALL categories, not just KPI-scoring ones |
+| Score calculation | No change — `kpi_weight = 0%` in their template already handles it |
+| Admin UI | HR/Super Admin needs to manage & assign separate KPI sets per category |
+
+**DB schema change**: Minor — one `category_scope` column on `kpis` table.
+**Logic change**: Medium — form routing + KPI library assignment per category.
+
+---
+
+### If B3 changes — Competency scoring method differs per category
+
+**Current assumption**: One competency scoring method applies to all categories that have competency (Eksekutif + Sokongan/Teknikal).
+
+**If HR confirms different methods per category:**
+
+| What Changes | Impact |
+|---|---|
+| `scorecard_templates` | Add `competency_method` column (e.g. `weighted`, `override`, `average`) |
+| Score engine | Branching logic per category when computing `final_rating` on competency |
+| Config | Method becomes per-template config, not a global setting |
+| UI | No visible change to staff — only affects backend calculation |
+
+**DB schema change**: Minor — one `competency_method` column on `scorecard_templates`.
+**Logic change**: Low — swap formula based on template setting.
+
+---
+
+### If B3 changes — Competency method for Sokongan/Teknikal needs stronger protection
+
+**Why**: Sokongan/Teknikal are 100% Competency — a biased manager can fully tank their score with no KPI to balance it out.
+
+**If HR wants a safeguard for this category specifically:**
+
+| Option | What to add |
+|---|---|
+| Method D (Capped Deviation) | Add deviation check + HR notification logic for Sokongan/Teknikal only |
+| Justification field | Add `manager_justification` column on `scorecard_competencies` if deviation exceeds threshold |
+
+**DB schema change**: Minor — one optional `manager_justification` column.
+**Logic change**: Medium — deviation check + HR alert workflow.
+
+---
+
+## 11. System Terminology (Finalised)
 
 All UI labels, module names, and field names in the system must follow this convention.
 
@@ -364,162 +427,23 @@ All UI labels, module names, and field names in the system must follow this conv
 
 ---
 
-## 11. Competency Scoring Method — Options Comparison
+## 12. Competency Scoring Method
 
-When a staff member submits their Penilaian Keperibadian (Competency Assessment), there are **two ratings** on the table — the staff's self-rating and the manager's rating. The question is: **how does the system compute the final competency score?**
+Competency scoring follows **garis panduan dan ketetapan ALP** — the appraisal session is conducted strictly based on ALP Board guidelines and resolutions.
 
-> Both ratings are always saved regardless of which method is chosen — for transparency and audit trail.
+Both ratings (staff self-rating + manager rating) are always saved regardless of outcome — for transparency and audit trail.
 
----
-
-### Method A — Manager Override (Supervisor Replaces Self-Rating)
-
-**How it works:** Manager sees the staff's self-rating, then enters their own score. The manager's score completely replaces the self-rating as the final score. Self-rating is stored for reference only.
-
-**Example:**
-
-| Competency    | Self-Rating | Manager Rating | Final Score   |
-| ------------- | ----------- | -------------- | ------------- |
-| Teamwork      | 85%         | 70%            | **70%** |
-| Communication | 90%         | 80%            | **80%** |
-
-**Pros:**
-
-- Simple — no formula complexity
-- Manager has full accountability for the final score
-- Reduces grade inflation from over-confident self-raters
-- The reference system (AIROD PMS PDF) uses this method
-
-**Cons:**
-
-- Staff may feel their self-reflection is pointless if it has zero impact
-- Risk of biased managers giving unfairly low scores with no check
-- No incentive for staff to take self-assessment seriously
+> Pending B3 confirmation from PNSB HR. See **Section 10 Change Impact Notes** for what changes in DB and logic if the method differs per category.
 
 ---
 
-### Method B — Simple Average (50/50)
-
-**How it works:** Final score = (Self-Rating + Manager Rating) ÷ 2. Both carry equal weight.
-
-**Example:**
-
-| Competency    | Self-Rating | Manager Rating | Final Score     |
-| ------------- | ----------- | -------------- | --------------- |
-| Teamwork      | 85%         | 70%            | **77.5%** |
-| Communication | 90%         | 80%            | **85%**   |
-
-**Pros:**
-
-- Fair and transparent — both parties contribute equally
-- Staff feel their self-assessment matters
-- Easy to explain to employees
-
-**Cons:**
-
-- A dishonest staff member who inflates their self-rating pulls the final score up
-- Manager and staff may "negotiate" scores rather than rate honestly
-- Does not reflect real-world practice where the manager's view usually carries more weight
-
----
-
-### Method C — Weighted Average (Manager Heavier)
-
-**How it works:** Final score = (Self-Rating × W1) + (Manager Rating × W2), where W2 > W1. Common split: 30% self + 70% manager.
-
-**Example (30/70 split):**
-
-| Competency    | Self-Rating | Manager Rating | Final Score                            |
-| ------------- | ----------- | -------------- | -------------------------------------- |
-| Teamwork      | 85%         | 70%            | (85×0.3) + (70×0.7) =**74.5%** |
-| Communication | 90%         | 80%            | (90×0.3) + (80×0.7) =**83%**   |
-
-**Pros:**
-
-- Self-rating still has influence — encourages honest self-reflection
-- Manager's view dominates the outcome — aligns with organisational authority
-- Reduces impact of inflated self-ratings compared to Method B
-- Weights are configurable (can adjust per category or cycle)
-
-**Cons:**
-
-- Slightly more complex to explain to staff
-- Weight ratio needs a decision (30/70? 20/80?) — adds another open question
-- Still vulnerable to extreme self-inflation if weight is too high
-
----
-
-### Method D — Capped Deviation (Manager Can Only Adjust Within a Range)
-
-**How it works:** Manager cannot deviate more than a set range (e.g. ±15%) from the staff's self-rating without providing a written justification. If deviation exceeds the threshold, HR is notified.
-
-**Example (±15% cap without justification):**
-
-| Competency    | Self-Rating | Manager Rating | Within Cap?                                  | Final Score   |
-| ------------- | ----------- | -------------- | -------------------------------------------- | ------------- |
-| Teamwork      | 85%         | 70%            | ✅ Yes (diff = 15%)                          | **70%** |
-| Communication | 90%         | 60%            | ❌ No (diff = 30%) — justification required | Pending       |
-
-**Pros:**
-
-- Protects staff from unfair/vindictive managers
-- Forces managers to justify large score differences — creates accountability
-- Encourages honest rating from both sides
-
-**Cons:**
-
-- Most complex to implement — needs justification workflow and HR notification
-- Can slow down the appraisal process if many justifications are triggered
-- May not suit PNSB's current maturity level for a first-phase system
-
----
-
-### Method E — Blind Rating (Both Rate Independently, Then Compare)
-
-**How it works:** Staff submits self-rating first. Manager rates independently **without seeing** the self-rating. After both are submitted, the system reveals both scores side-by-side. Manager's score is used as final, but the gap is visible to both parties for discussion.
-
-**Example:**
-
-| Competency    | Self-Rating | Manager Rating | Gap  | Final Score   |
-| ------------- | ----------- | -------------- | ---- | ------------- |
-| Teamwork      | 85%         | 70%            | -15% | **70%** |
-| Communication | 90%         | 80%            | -10% | **80%** |
-
-**Pros:**
-
-- Eliminates anchoring bias — manager is not influenced by seeing self-rating first
-- Gap report is useful for development conversations
-- Completely honest ratings from both sides
-
-**Cons:**
-
-- Harder to implement (must hide self-rating from manager until they submit)
-- Manager loses context — may rate something lower simply because they forgot an incident the staff documented
-- Unusual for Malaysian HR practices — may confuse users
-
----
-
-### Summary & Recommendation
-
-| Method                | Complexity | Staff Fairness | Manager Authority | Grade Inflation Risk | Recommended For                     |
-| --------------------- | ---------- | -------------- | ----------------- | -------------------- | ----------------------------------- |
-| A — Override         | Low        | Low            | High              | Low                  | Simple first-phase system           |
-| B — 50/50 Average    | Low        | High           | Medium            | High                 | Collaborative cultures              |
-| C — Weighted Average | Medium     | Medium         | High              | Medium               | **Balanced — good for PNSB** |
-| D — Capped Deviation | High       | High           | Medium            | Low                  | Mature HR systems                   |
-| E — Blind Rating     | High       | Medium         | High              | Low                  | Research / academic orgs            |
-
-> **Suggested starting point for PNSB**: **Method C (Weighted Average, 30% self / 70% manager)** — gives staff a voice while keeping the manager in control. Simple enough for a first-phase system. The weights can be made configurable so PNSB can adjust later without code changes.
->
-> **Decision needed from PNSB HR**: Which method do they want to use?
-
----
-
-## 12. Files Reference
+## 13. Files Reference
 
 | File                                            | Description                                                     |
 | ----------------------------------------------- | --------------------------------------------------------------- |
-| `flow-diagram.md`                             | Full Mermaid flow diagram — all phases + rejection cases       |
+| `flow-diagram.md`                             | Full Mermaid flow diagram — all phases + rejection cases        |
+| `db-design.md`                               | Full database design — all tables, columns, indexes, business rules |
 | `files/AIROD_PMS.pdf`                         | Reference PMS slide deck                                        |
-| `files/908b7001f2ffdffaf1cc0693c17a88a2.xlsx` | PNSB KPI form (KPI1) + Process flow (Proses PMS)                |
+| `files/908b7001f2ffdffaf1cc0693c17a88a2.xlsx` | PNSB KPI form (KPI1) + Process flow (Proses PMS) — binary      |
+| `files/kpi1-excel-data.md`                   | Readable export of the Excel above — KPI table, tier scoring formula, B2 resolution proof |
 | `files/image.png`                             | Bell curve summary — actual PNSB staff distribution (91 staff) |

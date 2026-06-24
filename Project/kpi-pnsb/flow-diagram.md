@@ -79,10 +79,10 @@ flowchart TD
         P4A -->|Eksekutif and Pengurusan Kanan\nALP ketetapan: 80% KPI plus 20% Competency| P4C[Pengurus - Manager Scores\n80% KPI plus 20% Penilaian Keperibadian]
         P4A -->|Sokongan and Teknikal\nALP ketetapan: 100% Competency| P4D[Pengurus - Manager Scores\nPenilaian Keperibadian Only - 100% weight]
 
-        P4B --> P4E[Manager Directly Overrides KPI Score\nReviews Actual vs Ambangan / Setuju / Lebihan\nThreshold / Meet Target / Stretched\nManager score is FINAL — no dispute path]
+        P4B --> P4E[Manager Directly Overrides KPI Score\nTier Scoring: Ambangan=60 Setuju=80 Lebihan=100 Below=0\nSkor = Pencapaian divided by 100 x KPI Weight\nHard cap at 100 — no score above 100\nNo rejection back to employee — Manager score is FINAL]
         P4C --> P4E
         P4C --> P4F
-        P4D --> P4F[Manager Directly Overrides Competency Score\nStaff Self-Rating visible to Manager\nManager enters own rating\nManager rating is FINAL — no dispute path]
+        P4D --> P4F[Manager Directly Overrides Competency Score\nStaff Self-Rating visible as reference only\nManager enters final score directly\nNo rejection back to employee\nManager score is FINAL]
 
         P4E --> P4H[Score Confirmed\nManager Override Recorded]
         P4F --> P4H
@@ -163,6 +163,6 @@ flowchart TD
 | Company KPI | Ahli Lembaga Pengarah (ALP) | HR / Management | Revise & resubmit to ALP |
 | Individual KPI — Minor | Ketua Pegawai Eksekutif (KPE) / Ketua Bahagian | Staff revises independently | Revise & resubmit |
 | Individual KPI — Major | Ketua Pegawai Eksekutif (KPE) / Ketua Bahagian | Ketua Bahagian guides revision directly | Redo from start |
-| Score Override (Appraisal) | Manager overrides staff score directly | N/A — no in-system dispute path | Manager is final authority |
+| Score Override (Appraisal) | Manager overrides staff score directly in-system | N/A — no rejection back to employee, no resubmission | Manager is final authority |
 | Bell Curve Off (Moderation) | Ketua Pegawai Eksekutif (KPE) finds distribution wrong | Ketua Bahagian adjusts grades | Recheck bell curve |
 | Final Grade Appeal | Staff rejects final grade | HR + Ketua Bahagian reviews formally | Revised or stands |
