@@ -421,7 +421,7 @@ INDEX idx_mod_logs_cycle_round (cycle_id, round)
 | `kpe` → no `scorecard_competencies` created | Service layer on scorecard creation |
 | `manager_rating` always becomes `final_rating` (C1) | Competency score service |
 | `pencapaian_sebenar` only ever = 0, 60, 80, 100 (C7) | KPI score service |
-| `final_score` = kpi_score × (kpi_weight/100) + competency_score × (competency_weight/100) | Score calculation service |
+| `final_score` = `(kpi_score × kpi_weight/100) + (competency_score × competency_weight/100)` — all values on 0–100 scale, NOT /5 | Score calculation service |
 | Grade auto-assigned from `final_score` thresholds (C5) | Grade assignment service |
 | BSC weights must sum to 100% | Validation on `bsc_perspectives` update |
 | KPI `kpi_weight` per BSC perspective must sum to that perspective's weight | Validation on scorecard_kpis |

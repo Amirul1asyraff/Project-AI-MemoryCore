@@ -208,6 +208,47 @@ Ahli Lembaga Pengarah - ALP (Board of Directors)
 - **Ketua Bahagian (Department Head) Dash**: Team KPI completion, distribution preview
 - **Bahagian Sumber Manusia (HR) / Admin Dash**: Company-wide bell curve, moderation controls, grade distribution
 
+### 🧮 Calculation Preview Tool (Inspired by AIROD PMS+)
+
+> HR and Super Admin can plug in scores and preview the computed result before saving — useful during moderation and appraisal sessions.
+
+**PNSB Calculation Formula (100% scale — not AIROD's /5 scale):**
+
+**Step 1 — KPI Score per KPI item:**
+```
+Pencapaian Sebenar = 0 / 60 / 80 / 100  (based on tier achieved)
+Skor               = Pencapaian Sebenar / 100 × Jumlah Kecil Pemberat (KPI item weight %)
+```
+
+**Step 2 — Total KPI Score:**
+```
+KPI Score = SUM(Skor) across all KPI items in the scorecard
+```
+
+**Step 3 — Competency Score:**
+```
+Competency Score = AVG(manager_rating) across all competency items  (method pending B3)
+```
+
+**Step 4 — Final Score:**
+```
+Final Score = (KPI Score × kpi_weight) + (Competency Score × competency_weight)
+
+Example (Eksekutif — 80% KPI / 20% Competency):
+Final Score = (KPI Score × 0.80) + (Competency Score × 0.20)
+```
+
+**Step 5 — Grade auto-assigned from Final Score (C5):**
+```
+>= 90  → Cemerlang
+>= 76  → Sangat Baik
+>= 60  → Baik
+>= 50  → Memuaskan
+< 50   → Perlu Diperbaiki
+```
+
+> The preview tool should show a live simulation panel where HR can adjust individual KPI tier selections and competency scores to see the final score and grade update in real time — before committing the manager override.
+
 ---
 
 ## 7. Database Schema
