@@ -180,40 +180,195 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 
 ## 8. ✅ Decisions Confirmed
 
-| #  | Topic                             | Decision                                                                                         |
-| -- | --------------------------------- | ------------------------------------------------------------------------------------------------ |
-| 1  | **Company Name**            | PNSB = Permodalan Negeri Selangor Berhad                                                         |
-| 2  | **BSC Weights**             | Financial 40%, Customer 30%, Internal 20%, Learning 10% — fixed                                 |
-| 3  | **Scoring Split**           | CEO: 100% KPI / Exec→Senior Mgmt: 80% KPI + 20% Competency / Support+Technical: 100% Competency |
-| 4  | **KPI Target Tiers**        | 3-tier: Threshold / Meet Target / Stretched                                                      |
-| 5  | **Performance Categories**  | 5 levels: Perlu Diperbaiki / Memuaskan / Baik / Sangat Baik / Cemerlang                          |
-| 6  | **Bell Curve Moderation**   | Confirmed — 2-round moderation (Bahagian Sumber Manusia / HR then Ketua Pegawai Eksekutif / KPE) |
-| 7  | **Appraisal Cycle**         | Annual — January to December                                                                      |
-| 8  | **Company KPI Approval**    | Ahli Lembaga Pengarah (ALP / Board of Directors) approves company KPI                             |
-| 9  | **Individual KPI Approval** | Ketua Pegawai Eksekutif (KPE / CEO) or Department Head approves individual KPIs                   |
-| 10 | **Role Architecture**       | Hierarchy-driven (manager_id chain)                                                              |
-| 11 | **Rating Scale**            | Percentage-based (0–100%)                                                                       |
+| #  | Topic                             | Decision                                                                                                                   |
+| -- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 1  | **Company Name**            | PNSB = Permodalan Negeri Selangor Berhad                                                                                   |
+| 2  | **BSC Weights**             | Financial 40%, Customer 30%, Internal 20%, Learning 10% — fixed                                                           |
+| 3  | **Scoring Split**           | CEO: 100% KPI / Exec→Senior Mgmt: 80% KPI + 20% Competency / Support+Technical: 100% Competency                           |
+| 4  | **KPI Target Tiers**        | 3-tier: Threshold / Meet Target / Stretched                                                                                |
+| 5  | **Performance Categories**  | 5 levels: Perlu Diperbaiki / Memuaskan / Baik / Sangat Baik / Cemerlang                                                    |
+| 6  | **Bell Curve Moderation**   | Confirmed — 2-round moderation (Bahagian Sumber Manusia / HR then Ketua Pegawai Eksekutif / KPE)                          |
+| 7  | **Appraisal Cycle**         | Annual — January to December                                                                                              |
+| 8  | **Company KPI Approval**    | Ahli Lembaga Pengarah (ALP / Board of Directors) approves company KPI                                                      |
+| 9  | **Individual KPI Approval** | Ketua Pegawai Eksekutif (KPE / CEO) or Department Head approves individual KPIs                                            |
+| 10 | **Role Architecture**       | Hierarchy-driven (manager_id chain)                                                                                        |
+| 11 | **Rating Scale**            | Percentage-based (0–100%)                                                                                                 |
+| 12 | **Competency scoring**      | Manager sees self-rating first, then enters own rating — supervisor's rating is the final score (overrides, not averaged) |
+| 13 | **KPI rejection flow**      | Rejected KPI → staff edits and resubmits — manager does not edit staff KPI directly                                      |
 
 ---
 
-## 9. ❓ Open Questions (KIV)
+## 9. ❓ Open Questions (Keep In View)
 
-| # | Topic                               | Status                                                           |
-| - | ----------------------------------- | ---------------------------------------------------------------- |
-| 1 | **Competency scoring method** | Self + Manager average? Or weighted? TBC                         |
-| 2 | **KPI rejection flow**        | Does staff revise & resubmit, or Dept Head edits directly? TBC   |
-| 3 | **Bell curve enforcement**    | Hard cap per category, or target/guideline only? TBC             |
-| 4 | **Subsidiary handling**       | Same system for anak syarikat? Separate instances or shared? TBC |
-| 5 | **WhatsApp integration**      | Keep In View (KIV) — notification via WhatsApp for submission reminders — pending scope |
-| 6 | **Final sign-off layers**     | Exact flow after moderation: HR only, or additional layer? TBC   |
+| # | Topic                               | Status                                                                                                                                                         |
+| - | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | **Competency scoring method** | ⚠️**Needs decision** — See Section 10 for full method comparison with pros & cons                                                                     |
+| 2 | **KPI rejection flow**        | ✅**Decided** — Manager rejects with a written reason. Staff receives rejection + reason, edits the KPI, and resubmits. Manager does not edit directly. |
+| 3 | **Bell curve enforcement**    | Hard cap per category, or target/guideline only? TBC                                                                                                           |
+| 4 | **Subsidiary handling**       | Same system for anak syarikat? Separate instances or shared? TBC                                                                                               |
+| 5 | **WhatsApp integration**      | Keep In View (KIV) — notification via WhatsApp for submission reminders — pending scope                                                                      |
+| 6 | **Final sign-off layers**     | Exact flow after moderation: HR only, or additional layer? TBC                                                                                                 |
 
 ---
 
-## 10. Files Reference
+com
+
+## 10. Competency Scoring Method — Options Comparison
+
+When a staff member submits their Penilaian Keperibadian (Competency Assessment), there are **two ratings** on the table — the staff's self-rating and the manager's rating. The question is: **how does the system compute the final competency score?**
+
+> Both ratings are always saved regardless of which method is chosen — for transparency and audit trail.
+
+---
+
+### Method A — Manager Override (Supervisor Replaces Self-Rating)
+
+**How it works:** Manager sees the staff's self-rating, then enters their own score. The manager's score completely replaces the self-rating as the final score. Self-rating is stored for reference only.
+
+**Example:**
+
+| Competency    | Self-Rating | Manager Rating | Final Score   |
+| ------------- | ----------- | -------------- | ------------- |
+| Teamwork      | 85%         | 70%            | **70%** |
+| Communication | 90%         | 80%            | **80%** |
+
+**Pros:**
+
+- Simple — no formula complexity
+- Manager has full accountability for the final score
+- Reduces grade inflation from over-confident self-raters
+- The reference system (AIROD PMS PDF) uses this method
+
+**Cons:**
+
+- Staff may feel their self-reflection is pointless if it has zero impact
+- Risk of biased managers giving unfairly low scores with no check
+- No incentive for staff to take self-assessment seriously
+
+---
+
+### Method B — Simple Average (50/50)
+
+**How it works:** Final score = (Self-Rating + Manager Rating) ÷ 2. Both carry equal weight.
+
+**Example:**
+
+| Competency    | Self-Rating | Manager Rating | Final Score     |
+| ------------- | ----------- | -------------- | --------------- |
+| Teamwork      | 85%         | 70%            | **77.5%** |
+| Communication | 90%         | 80%            | **85%**   |
+
+**Pros:**
+
+- Fair and transparent — both parties contribute equally
+- Staff feel their self-assessment matters
+- Easy to explain to employees
+
+**Cons:**
+
+- A dishonest staff member who inflates their self-rating pulls the final score up
+- Manager and staff may "negotiate" scores rather than rate honestly
+- Does not reflect real-world practice where the manager's view usually carries more weight
+
+---
+
+### Method C — Weighted Average (Manager Heavier)
+
+**How it works:** Final score = (Self-Rating × W1) + (Manager Rating × W2), where W2 > W1. Common split: 30% self + 70% manager.
+
+**Example (30/70 split):**
+
+| Competency    | Self-Rating | Manager Rating | Final Score                            |
+| ------------- | ----------- | -------------- | -------------------------------------- |
+| Teamwork      | 85%         | 70%            | (85×0.3) + (70×0.7) =**74.5%** |
+| Communication | 90%         | 80%            | (90×0.3) + (80×0.7) =**83%**   |
+
+**Pros:**
+
+- Self-rating still has influence — encourages honest self-reflection
+- Manager's view dominates the outcome — aligns with organisational authority
+- Reduces impact of inflated self-ratings compared to Method B
+- Weights are configurable (can adjust per category or cycle)
+
+**Cons:**
+
+- Slightly more complex to explain to staff
+- Weight ratio needs a decision (30/70? 20/80?) — adds another open question
+- Still vulnerable to extreme self-inflation if weight is too high
+
+---
+
+### Method D — Capped Deviation (Manager Can Only Adjust Within a Range)
+
+**How it works:** Manager cannot deviate more than a set range (e.g. ±15%) from the staff's self-rating without providing a written justification. If deviation exceeds the threshold, HR is notified.
+
+**Example (±15% cap without justification):**
+
+| Competency    | Self-Rating | Manager Rating | Within Cap?                                  | Final Score   |
+| ------------- | ----------- | -------------- | -------------------------------------------- | ------------- |
+| Teamwork      | 85%         | 70%            | ✅ Yes (diff = 15%)                          | **70%** |
+| Communication | 90%         | 60%            | ❌ No (diff = 30%) — justification required | Pending       |
+
+**Pros:**
+
+- Protects staff from unfair/vindictive managers
+- Forces managers to justify large score differences — creates accountability
+- Encourages honest rating from both sides
+
+**Cons:**
+
+- Most complex to implement — needs justification workflow and HR notification
+- Can slow down the appraisal process if many justifications are triggered
+- May not suit PNSB's current maturity level for a first-phase system
+
+---
+
+### Method E — Blind Rating (Both Rate Independently, Then Compare)
+
+**How it works:** Staff submits self-rating first. Manager rates independently **without seeing** the self-rating. After both are submitted, the system reveals both scores side-by-side. Manager's score is used as final, but the gap is visible to both parties for discussion.
+
+**Example:**
+
+| Competency    | Self-Rating | Manager Rating | Gap  | Final Score   |
+| ------------- | ----------- | -------------- | ---- | ------------- |
+| Teamwork      | 85%         | 70%            | -15% | **70%** |
+| Communication | 90%         | 80%            | -10% | **80%** |
+
+**Pros:**
+
+- Eliminates anchoring bias — manager is not influenced by seeing self-rating first
+- Gap report is useful for development conversations
+- Completely honest ratings from both sides
+
+**Cons:**
+
+- Harder to implement (must hide self-rating from manager until they submit)
+- Manager loses context — may rate something lower simply because they forgot an incident the staff documented
+- Unusual for Malaysian HR practices — may confuse users
+
+---
+
+### Summary & Recommendation
+
+| Method                | Complexity | Staff Fairness | Manager Authority | Grade Inflation Risk | Recommended For                     |
+| --------------------- | ---------- | -------------- | ----------------- | -------------------- | ----------------------------------- |
+| A — Override         | Low        | Low            | High              | Low                  | Simple first-phase system           |
+| B — 50/50 Average    | Low        | High           | Medium            | High                 | Collaborative cultures              |
+| C — Weighted Average | Medium     | Medium         | High              | Medium               | **Balanced — good for PNSB** |
+| D — Capped Deviation | High       | High           | Medium            | Low                  | Mature HR systems                   |
+| E — Blind Rating     | High       | Medium         | High              | Low                  | Research / academic orgs            |
+
+> **Suggested starting point for PNSB**: **Method C (Weighted Average, 30% self / 70% manager)** — gives staff a voice while keeping the manager in control. Simple enough for a first-phase system. The weights can be made configurable so PNSB can adjust later without code changes.
+>
+> **Decision needed from PNSB HR**: Which method do they want to use?
+
+---
+
+## 12. Files Reference
 
 | File                                            | Description                                                     |
 | ----------------------------------------------- | --------------------------------------------------------------- |
-| `flow-diagram.md`                             | Full Mermaid flow diagram — all phases + rejection cases        |
+| `flow-diagram.md`                             | Full Mermaid flow diagram — all phases + rejection cases       |
 | `files/AIROD_PMS.pdf`                         | Reference PMS slide deck                                        |
 | `files/908b7001f2ffdffaf1cc0693c17a88a2.xlsx` | PNSB KPI form (KPI1) + Process flow (Proses PMS)                |
 | `files/image.png`                             | Bell curve summary — actual PNSB staff distribution (91 staff) |
