@@ -1,4 +1,4 @@
-# 🎯 PNSB BSC KPI - Planning Document
+# 1🎯 PNSB BSC KPI - Planning Document
 
 **PNSB** = Permodalan Negeri Selangor Berhad
 **BSC** = Balanced Scorecard (Kad Skor Imbangan)
@@ -198,20 +198,47 @@ moderation_logs         (scorecard_id, cycle_id, before_grade, after_grade, mode
 
 ---
 
-## 9. ❓ Open Questions (Keep In View)
+## 9. ❓ Questions & Decisions Tracker
 
-| # | Topic                               | Status                                                                                                                                                         |
-| - | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 | **Competency scoring method** | ⚠️**Needs decision** — See Section 10 for full method comparison with pros & cons                                                                     |
-| 2 | **KPI rejection flow**        | ✅**Decided** — Manager rejects with a written reason. Staff receives rejection + reason, edits the KPI, and resubmits. Manager does not edit directly. |
-| 3 | **Bell curve enforcement**    | Hard cap per category, or target/guideline only? TBC                                                                                                           |
-| 4 | **Subsidiary handling**       | Same system for anak syarikat? Separate instances or shared? TBC                                                                                               |
-| 5 | **WhatsApp integration**      | Keep In View (KIV) — notification via WhatsApp for submission reminders — pending scope                                                                      |
-| 6 | **Final sign-off layers**     | Exact flow after moderation: HR only, or additional layer? TBC                                                                                                 |
+> Legend: 🔴 **BLOCKER** — must decide before dev starts | ⚠️ **NEEDS DECISION** — needed before that module is built | 🔵 **KIV** — deferred to later phase | ✅ **DECIDED** — confirmed and locked
+
+### 🔴 Blockers (Must Decide First)
+
+| #  | Topic                               | Question                                                                                                                                | Status             |
+| -- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| B1 | **Score → Grade Boundary**   | What score range maps to each grade? (e.g. 90–100% = Cemerlang, 75–89% = Sangat Baik, etc.)                                           | 🔴 Pending PNSB HR |
+| B2 | **KPI 3-Tier Score Formula**  | How does achieving each tier translate to a score? (e.g. Threshold = 60%, Meet Target = 100%, Stretched = 120%?) Can score exceed 100%? | 🔴 Pending PNSB HR |
+| B3 | **Competency Scoring Method** | Which method to combine self-rating + manager rating into final score? See Section 10 for full options comparison.                      | 🔴 Pending PNSB HR |
 
 ---
 
-com
+### ⚠️ Needs Decision (Before That Module Is Built)
+
+| #  | Topic                                  | Question                                                                                                                                                 | Status   |
+| -- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| D1 | **Final Sign-off Layers**        | After moderation, who locks the final grades — HR only, or does KPE also sign off?                                                                      | ⚠️ TBC |
+| D2 | **Actual Competency Items**      | What are PNSB's actual Core and Functional competency items? Needed for DB seeding and appraisal form UI.                                                | ⚠️ TBC |
+| D3 | **Employee Category Boundaries** | Which exact job titles fall under each category (CEO / Eksekutif → Pengurusan Kanan / Sokongan / Teknikal)? Needed for auto-assigning scoring template. | ⚠️ TBC |
+| D4 | **Subsidiary Handling**          | Same system or separate instances for anak syarikat (subsidiaries)? Affects overall multi-tenancy architecture.                                          | ⚠️ TBC |
+| D5 | **KPI Resubmission Limit**       | Can staff resubmit a rejected KPI unlimited times, or is there a maximum attempt limit?                                                                  | ⚠️ TBC |
+
+---
+
+### 🔵 KIV (Deferred — Later Phase)
+
+| #  | Topic                            | Note                                                                                                                       |
+| -- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| K1 | **Bell Curve Enforcement** | Hard system cap vs soft guideline — deferred. Phase 1 will show a warning only; hard enforcement scoped to a later phase. |
+| K2 | **WhatsApp Integration**   | Submission reminder notifications via WhatsApp — pending scope.                                                           |
+
+---
+
+### ✅ Decided (Locked)
+
+| #  | Topic                                  | Decision                                                                                                                       |
+| -- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| C1 | **KPI Rejection Flow**           | Manager rejects with a written reason. Staff receives rejection + reason, edits and resubmits. Manager does not edit directly. |
+| C2 | **Competency Rating Visibility** | Manager sees staff self-rating before entering their own score. Both versions are saved.                                       |
 
 ## 10. Competency Scoring Method — Options Comparison
 
