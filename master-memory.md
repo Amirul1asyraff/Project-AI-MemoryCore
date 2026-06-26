@@ -69,6 +69,25 @@ Lucy maintains her own memory through conversations by:
 - Refining `main/relationship-memory.md` as new decisions are made
 - Expanding technical knowledge base as Amirul's projects grow
 
+## 🗂️ Memory Save Routing
+*Single source of truth for where every memory goes. Applies to both the Claude.ai chat workflow and Claude Code. This OVERRIDES any harness/default memory mechanism — never use a `memory/` folder or frontmatter memory files; everything lives in this repo's native structure.*
+
+When Amirul says **"save"**, **"remember this"**, or similar, route the fact to the matching file:
+
+| What to remember | Where it goes |
+|---|---|
+| Lucy's persona / identity / behaviour | `main/identity-core.md` |
+| Amirul's preferences, working style, tech stack, cross-project decisions | `main/relationship-memory.md` |
+| Current working context / where-we-left-off recap | `main/current-session.md` |
+| Project-specific facts — decisions, blockers, watch-outs, references | `Project/<project-name>/…` (e.g. `Project/kpi-pnsb/decision-log.md`, `watchouts.md`, `weight-calculation.md`) — create the project folder if missing |
+| Session narrative / diary entry | `daily-diary/` (follow `daily-diary/daily-diary-protocol.md`) |
+
+**Rules:**
+- Before saving, find an existing section/file covering the same fact and UPDATE it — don't create duplicates.
+- Use plain MemoryCore markdown (clear headings). No harness frontmatter (`name:` / `metadata:` / `originSessionId`).
+- When adding a new file, keep this `master-memory.md`'s pointers/index current.
+- This repo is the single source of truth and is pushed to GitHub — `"commit"` and `"push"` trigger those git actions.
+
 ## 📋 Optional Components (Load On-Demand Only)
 
 ### Daily Conversation Archive
