@@ -3,29 +3,27 @@
 
 ## Session RAM Status
 **Current Session**: Active
-**Last Activity**: Monday, June 23, 2026 — Planning the PMS (Performance Management System)
-**Session Focus**: Perfecting the `Project/PMS/planning.md` before any code is written.
+**Last Activity**: Saturday, June 27, 2026 — Built the Moderation (bell curve) module for the PNSB KPI system.
+**Session Focus**: kpi_pnsb project (`C:\laragon\www\kpi_pnsb`) — Moderation module + UI polish + Spatie Media.
 
 ## 💭 Working Memory (RAM)
 *Temporary storage - cleared when session ends*
 
 ### Active Context
-- **Current Topic**: PMS Planning — Competency Framework
-- **Immediate Goals**: Continue with DB Schema refinement and Dashboards module.
-- **Recent Progress**:
-  - Pivoted focus from Library System to PMS (Performance Management System).
-  - Reviewed `Project/PMS/planning.md` brainstorm file.
-  - Locked 4 core decisions (weightage dynamic, approval management-driven KIV, rating 0–100%, bell curve KIV).
-  - Fleshed out Roles section — Role Architecture (Option A vs B) marked TBC.
-  - Documented full KPI Appraisal Workflow: Propose → Approve → Lock → Feedback → Self-Assessment → Manager Assessment → Sign-off. All fuzzy sub-details KIV'd.
-  - Documented full Competency Framework — Core vs Functional/Technical competencies, 0–100% scoring table, how it rolls up into final scorecard score.
-- **Next Steps**: DB Schema refinement, then Dashboards module.
+- **Current Topic**: PNSB BSC KPI Performance Management System — Moderation module just shipped.
+- **Immediate Goals**: Next module = **Reports & Dashboard** (charts + bell curve display + final grade reports).
+- **Recent Progress (2026-06-27)** — full detail in `Project/kpi-pnsb/decision-log.md`:
+  - **Moderation module BUILT** (bell curve MOD1=HR per-dept → MOD2=KPE org-wide → HR lock). Adjust = move grade band, score preserved, every move logged. Targets scale % × headcount (largest-remainder). Suite **191 green**.
+  - **Point A verification override** built (inline-edit weight/targets at approval, logs to score_overrides).
+  - **Competency Self-Assessment** redesigned to a **Likert matrix** (rows × 5 tinted level columns + radios) + **overall comment + multi-file attachments** via **Spatie Media Library** (installed this session).
+  - **TEMP dev helpers** added (Quick Login on login page, Fill-targets, Fill-results) — LOCAL ONLY, remove before production.
+- **Next Steps**: Reports & Dashboard module. Optional follow-ups: auto-`syncForCycle()` on phase entry; hard-gate Lock on MOD2 done.
 
 ### Session Recap (For Lucy Restart)
 *Quick summary when Lucy loads after close/reopen*
-- **Previous Session Summary**: Clarified Git workflows and helped Amirul prepare his Git Training presentation.
-- **Where We Left Off**: PMS planning.md — roles, KPI workflow, and competency framework done. DB schema and dashboards next.
-- **Amirul's Current State**: Planning phase only — no code yet. Wants the full plan locked before building.
+- **Previous Session Summary**: Built the Moderation/bell-curve module end-to-end for kpi_pnsb (MOD1 HR per-dept, MOD2 KPE org-wide, HR lock), plus the competency Likert-matrix UI + Spatie Media attachments + Point A override. 191 tests green.
+- **Where We Left Off**: Moderation done. **Reports & Dashboard is the next module.**
+- **Amirul's Current State**: Actively building (not planning). Stack: Laravel 13 + Livewire 4 (Volt) + Tailwind + MySQL. Likes: slice-by-slice builds, tests each slice, model-driven labels/colours, asks design Qs before coding. The harness auto-memory (`MEMORY.md`/`project_progress.md`) also tracks this project but MemoryCore is the source of truth.
 
 ## 🔄 Session Lifecycle
 *How this RAM-like memory works*

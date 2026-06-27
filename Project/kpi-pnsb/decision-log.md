@@ -149,9 +149,37 @@ Still TODO on cycle module: **Generate Scorecards button + generation logic** (o
 
 **BUILD ORDER (staged, loop, test each):** (1) schema — drop kpis.category_scope, add pivots `kpi_department`+`kpi_designation`, Kpi model departments()/designations() + level helpers, factories; (2) KPI Library form — replace category_scope select with a level + dept/designation scope picker (like competency form); (3) **pre-fill logic** — when KPI-setting opens for a KPI-based scorecard, auto-create scorecard_kpis from matching Library KPIs (Company + employee.department + employee.designation, deduped, snapshot title/objective/uom/pengukuran + default weight); (4) lock `Scorecards/Setup` — remove add/remove, employee only edits weight+targets on pre-filled lines; (5) unwind per-category balancing in Kpis/Show + simplify Cycles/Show generate gate; (6) seeder (scope demo KPIs by level+dept/designation) + tests + migrate:fresh. Resume from (1).
 
+## MODERATION MODULE — BUILT 2026-06-27 (bell curve, MOD1/MOD2, lock) ✅
+
+Full appraisal spine now reaches the end: `appraisal → manager review (grade) → moderation (MOD1→MOD2) → lock → completed/closed`. Suite **191 green**.
+
+**Locked decisions (Amirul, 2026-06-27):**
+- **Two rounds, per the schema:** **MOD1 = HR Admin (per-department)** → **MOD2 = KPE/executive-director (org-wide)** → **HR locks**. (Division Heads do NOT moderate — Amirul chose "MOD1 = HR" over "Division Heads do MOD1".) Resolves **D1: HR locks final grades.**
+- **Pool scope = per-department then org-wide.** Reconciled with "MOD1=HR": HR balances each department's curve (MOD1), then KPE balances the whole company (MOD2). Per-dept targets are **soft guidance** (small depts round ~0.5 → 0–1); the **real curve is enforced at MOD2 org-wide** (91 people = meaningful distribution).
+- **Adjust = move the GRADE BAND, never the score.** `final_score` is the earned performance (kept for audit/appeals); moderation only re-bands `scorecards.grade`. Reads as "earned 91 (Cemerlang) → moderated to Sangat Baik". (Chose this over score-tweaking — moderation is re-banding, not re-scoring.)
+- **Targets scale from % × headcount** (largest-remainder → counts sum exactly to headcount). Percentages: excellent 3.30 / very_good 17.58 / good 67.03 / satisfactory 7.69 / needs_improvement 4.40. 91 staff → exactly 3/16/61/7/4.
+- **Grade keys are ENGLISH** across `scorecards.grade` + `bell_curve_targets.grade` + `moderation_logs.{before,after}_grade` (excellent/very_good/good/satisfactory/needs_improvement) — the db-design Malay enum was superseded; DB + `Scorecard::GRADE_LABELS` agree.
+
+**Code built:**
+- `BellCurveTarget`: `PERCENTAGES` const, `targetsForHeadcount()` (largest-remainder), `distribution()` counter, `syncForCycle()` (persists org-wide targets — available but NOT yet auto-called on phase entry; screens use live computation).
+- `ModerationLog::record($scorecard, $round, $newGrade, $moderatorId)` — shared re-band: logs before/after grade (keeps score in before/after_score), updates grade, no-ops if unchanged. `ROUNDS` const.
+- `app/Livewire/Moderation/Index.php` — cycle picker + org distribution + department list (MOD1 links) + Run-MOD2 button + **`lockGrades()`** (scorecards→`completed`+locked_at/by, cycle→`closed`, status logs). `canLock()` = moderating + HR/super-admin.
+- `app/Livewire/Moderation/Session.php` — DRY single screen for BOTH rounds: `departmentId` set → MOD1 (HR), null → MOD2 (KPE). `round()`, `canAccess()` (round-gated), `isEditable()` (cycle.status==='moderation'), `reband()`. Live distribution vs target, employee table with grade dropdown.
+- Views: `moderation/index` + `moderation/session` wrappers, `livewire/moderation/{index,session}` + shared `_distribution` partial (bars + target marker + over/under). Routes `moderation.index|department|org` (role `super-admin|hr-admin|executive-director`). Sidebar "Moderation" link activated.
+- `ModerationTest` (8): exact-sum targets, zero headcount, sync idempotency, MOD1 re-band (keeps score + logs), MOD2 re-band, HR-blocked-from-MOD2, closed-cycle blocks re-band, HR lock closes cycle.
+
+**Optional follow-ups (not blockers):** (1) auto-call `syncForCycle()` when a cycle advances to moderation (persist targets for audit); (2) hard-gate Lock on MOD2 being complete (currently not enforced). **NEXT MODULE: Reports & Dashboard.**
+
+## OTHER WORK THIS SESSION (2026-06-27)
+
+- **TEMP dev helpers (LOCAL ONLY — remove before production):** (a) login page **"Dev Quick Login"** panel — one account per role (the 6 `@pnsb.com.my` personas), click "Use" fills email+password (`fillCredentials`), env-guarded; CEO (`kpe@`) given the **Management** department (UserSeeder + live row) so every quick-login user has dept+designation. (b) **"Dev: Fill targets"** button on `Scorecards/Setup` — fills Threshold/Meet/Stretched (60/80/100 + uom), leaves weight. (c) **"Dev: Fill results"** on `Scorecards/Results` — fills the selected period's achievement % (80) + sample actual. All three local-guarded in view + method.
+- **Point A verification override — BUILT.** `Appraisals/Show` at `kpi_submitted`: weight + Threshold/Meet/Stretched are now **inline-editable** (pre-filled with employee's proposed values). `approveKpis()` validates weights 0–100, then per changed field writes a `score_overrides` row (`stage=verification`, keeps before=employee/after=approved), updates the line, flips status. No edits = no override rows. AppraisalTest +3. Also fixed a **column-misalignment bug** on that page (body was missing Unit + Pengukuran `<td>`s → Pengukuran showed "—").
+- **Competency Self-Assessment UI → Likert matrix.** Replaced the 1–5 dropdown with a **table**: competencies = rows, the 5 levels = column headers (label + number once), a **radio** per cell, each level column **tinted** (rose→green scale) so radios are visible; hover a cell = tooltip with that competency's level description. Read-only after submit shows filled/empty circles. Save button moved to the **bottom** of the section.
+- **Competency comment + attachments (overall) — BUILT with Spatie Media Library.** Installed `spatie/laravel-medialibrary` v11. `Scorecard implements HasMedia` + `competency_attachments` collection (any type, multiple). New `scorecards.competency_self_comment` column. `Scorecards/Show`: WithFileUploads — comment textarea (saved with ratings) + multi-file upload (auto-uploads on pick, `updatedNewAttachments`) + remove + download links; gated to owner self-assess; read-only after submit. ScorecardModuleTest +3.
+
 ## Needs Decision (Before Module Build)
 
-- D1: Who locks final grades after moderation — HR only, or KPE also signs off?
+- ~~D1: Who locks final grades after moderation~~ → **RESOLVED 2026-06-27: HR locks (after KPE's MOD2).**
 - D2: Actual PNSB competency items (Core + Functional) — needed for DB seeding
 - D3: Exact job titles per category — needed to auto-assign scoring templates
 - D4: Subsidiary (anak syarikat) handling — shared system or separate instances?
