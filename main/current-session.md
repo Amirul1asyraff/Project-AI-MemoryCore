@@ -3,8 +3,8 @@
 
 ## Session RAM Status
 **Current Session**: Active
-**Last Activity**: Saturday, June 27, 2026 (PM) — Routing/docs/UI polish: login as default page, per-role flow diagrams, super-admin sidebar + dropdown fixes.
-**Session Focus**: kpi_pnsb project (`C:\laragon\www\kpi_pnsb`) — UI/routing polish after the Moderation module.
+**Last Activity**: Saturday, June 27, 2026 (PM) — Built the Reports & Dashboard module (role-aware dashboard + reports page + CSV/print export). 201 tests green.
+**Session Focus**: kpi_pnsb project (`C:\laragon\www\kpi_pnsb`) — Reports & Dashboard module.
 
 ## 💭 Working Memory (RAM)
 *Temporary storage - cleared when session ends*
@@ -26,7 +26,15 @@
   - **`flow-diagram.md` rebuilt as 5 per-role flowcharts** (CEO/KPE, HOD, Executive, Support, HR Admin) — each pseudocode + Mermaid; kept glossary/bell-curve/escalation.
   - **Super-admin sidebar**: "Assessments" section hidden via `@unlessrole('super-admin')` (admins aren't appraised). hr-admin left as-is.
   - **Dropdown overlap fixed** on `/scorecards` — Cycle select `px-3`→`pl-3 pr-8` (native arrow no longer overlaps the year).
-- **Next Steps**: Reports & Dashboard module. Optional follow-ups: auto-`syncForCycle()` on phase entry; hard-gate Lock on MOD2 done; optional "pre-moderation (original)" overlay curve on the chart.
+- **Role/HR consultation (2026-06-27 PM, no code change)** — locked two decisions (full detail in `Project/kpi-pnsb/decision-log.md`):
+  - **5 system roles, NOT 4** — `super-admin, hr-admin, executive-director, division-head, staff`. Amirul had forgotten `division-head` (Ketua Bahagian); it stays (dept-head reviewer + 80/20 reviewee, drives the `manager_id` chain). HOD vs Exec = different roles, same `executive` 80/20 category.
+  - **HR + super-admin NOT assessed** (kept current behaviour, my recommendation) — admin roles, separation of duties (can't lock your own grade). Already enforced by `eligibleEmployees()`. If real HR *people* ever need appraisal → **two-account model** (confirmed): admin account (`hr-admin`, no scorecard) + separate employee account (`staff`/`division-head`, assessed via chain). Detail in decision-log.
+- **Reports & Dashboard module — BUILT (2026-06-27 PM)** — full detail in `Project/kpi-pnsb/decision-log.md` → "Reports & Dashboard Module":
+  - **Role-aware Dashboard** (`Dashboard\Index`): admin/HR/KPE → org stats + grade curve; HOD → team pending + own card; staff → own scorecard.
+  - **Reports page** (`Reports\Index`, gated super-admin|hr-admin|executive-director): cycle selector → bell-curve + final-grade table (dept/category filters) + dept & category breakdowns + MOD1/MOD2 audit.
+  - **Export**: CSV (streamed, filtered) + Print/PDF (`window.print()` with `print:hidden` chrome). Ran `npm run build`.
+  - **201 tests green** (DashboardTest 3 + ReportsTest 6; fixed default ExampleTest for the `/`→login redirect). `ModerationDemoSeeder` run → cycle 2025 has 18 graded cards to demo with.
+- **Next Steps**: polish/verify the new module in-browser (login `superadmin@`). Optional follow-ups: auto-`syncForCycle()` on phase entry; hard-gate Lock on MOD2 done; optional "pre-moderation (original)" overlay curve on the chart; per-role dashboard refinements.
 
 ### Session Recap (For Lucy Restart)
 *Quick summary when Lucy loads after close/reopen*
