@@ -9,6 +9,22 @@ Key files: `planning.md`, `flow-diagram.md`, `db-design.md`, `files/kpi1-excel-d
 **System**: BSC KPI Performance Management System (Laravel + Vue.js + MySQL)
 **Reference system**: AIROD PMS+ (airod.pmsplus.my) — used as UI/flow reference only. PNSB diverges on scoring scale (% not 1–5), weight locking (ALP ketetapan), and a flexible review-period cycle (default half-yearly — see Appraisal Cycle Mechanics below; SUPERSEDES the old "annual-only" assumption).
 
+## Calculation Settings Module (2026-06-29, branch `feat/calculation-settings`, issue #1)
+
+New admin page `/calculation-settings` (super-admin | hr-admin), inspired by AIROD PMS+ "Calculation Settings". Surfaces scoring config that previously lived only in seeders/constants. Files: `app/Livewire/Settings/Calculation.php` + `resources/views/livewire/settings/calculation.blade.php` + route in `routes/web.php` + sidebar link. Tests: `tests/Feature/CalculationSettingsTest.php` (10).
+
+**4 panels:**
+1. **Score Weight Settings** — edit the 3 category templates' KPI/Competency split (`scorecard_templates`), hard 100%-per-row rule.
+2. **BSC Dimensions** — edit weight/description/sort_order of the fixed 4 perspectives (`bsc_perspectives`). **Add/Delete removed** (Amirul: keep at 4). Weight editing now reuses the KPI Library's rescale + 100% gate — see `weight-calculation.md` "TWO editors of besar".
+3. **Calculation Formula** — static reference panel.
+4. **Calculation Preview Tool** — live what-if mirroring `Appraisals\Show::completeReview()`: category + KPI score + a **Likert matrix of the 5 core competencies** (reuses the appraisal-review pattern) → final score + grade. Plus a **Bell Curve Distribution** sub-panel: pick cycle + department/org-wide → real distribution vs target (reuses `livewire/moderation/_bellcurve.blade.php` UNCHANGED) with a live gold "what-if marker" overlaid OUTSIDE the partial's `wire:ignore`.
+
+**Scope calls (Amirul):** skipped editable Rating Scale (would touch core `gradeForScore`) and per-department BSC weightages (conflicts with per-KPI weighting).
+
+**Bug fixed same session:** BSC weight edits desynced the KPI Library (see weight-calculation.md). Fix = extract `BscPerspective::rescaleKpiWeights()`, both editors use it, enforce 100%.
+
+**Status:** all on branch `feat/calculation-settings`, committed against #1, NOT yet merged. PR into `dev` not opened yet. `gh` CLI installed this session (`C:\Program Files\GitHub CLI\gh.exe`, authed as Amirul1asyraff). Full suite 244 green.
+
 ## Architecture Decisions (Locked)
 
 - **Employee categories & scoring split** (ALP ketetapan — cannot change without new Board resolution):
@@ -36,8 +52,32 @@ Key files: `planning.md`, `flow-diagram.md`, `db-design.md`, `files/kpi1-excel-d
 - **Cycle = forward-only.** No org-wide backward step (e.g. `appraisal → active`). Instead → **per-scorecard reopen exception**: HR reopens ONE scorecard back a step (e.g. `locked → appraisal`), logged to `scorecard_status_logs` with who/when/reason. Scalpel, not sledgehammer.
 - **Scorecard generation = SEPARATE button inside `draft`** (distinct from activation). HR previews the roster, then generates one scorecard per active employee in the appraisal chain (`executive-director`, `division-head`, `staff`), EXCLUDING `super-admin`/`hr-admin`. Template picked by `users.category`. Idempotent (unique `user_id`+`cycle_id`).
 - **New-hire mid-cycle**: HR manually adds a scorecard from the dashboard (re-running generation is idempotent and picks them up).
-- **Readiness snapshot before advancing**: dashboard shows scorecard counts per status; HR is WARNED (not blocked) if laggards exist — can advance anyway; stragglers left behind / handled manually.
+- **Readiness snapshot before advancing** *(REFINED 2026-06-29 — see "Phase-Gate Hardening" below)*: dashboard/modal shows scorecard counts per status. Entry into **appraisal = warn-but-allow** (laggards catch up during the phase). Entry into **moderation = HARD BLOCK** until every card is scored (it's the point of no return — all per-card work gates close). Empty cycle (0 scorecards) is blocked from advancing past `active`.
 - **`draft` = setup / `active`+ = frozen structure (Locked).** Cycle STRUCTURE is fully editable only while `draft`; it FREEZES on activation because recorded scores depend on it. Once `active`: number of review periods (frequency), period labels/weights/`is_final`, and scorecard templates (category splits) are LOCKED — cannot reshape mid-cycle (e.g. can't switch 2→4 periods once scores exist). KPI/competency weights are ALP-locked (super-admin only) regardless of phase. Still editable while active = per-person operational only: add new-hire scorecard, reopen one scorecard, and adjust period window dates (`opens_at`/`closes_at`, scheduling only — doesn't touch data). One line: shape the cycle in draft; once live you can only nudge individuals, never reshape the machine.
+
+## Phase-Gate Hardening + Bell Curve Summary (BUILT 2026-06-29, Amirul)
+
+Two builds this session, both shipped green (234 tests, Pint clean, `npm run build`).
+
+### Phase-gate hardening (the "stranded scorecards" fix)
+- **Bug Amirul found**: a Support card sat in `draft` while the cycle was also `draft` and showed (with nothing to do) in the manager's Team Approvals + skewed the cycle's Draft counter. Then later, the CEO card stuck at `kpi_approved` and the HOD at `appraisal` after the cycle was pushed to `moderation` — both permanently stranded.
+- **Root cause = two gate gaps**: (1) `advancePhase()` never checked scorecard readiness, so the cycle outran its cards (once `moderation`, every per-card work gate closes → stranded); (2) KPI submit/verify were NOT gated on cycle phase (unlike competency self-assessment), so KPI cards raced ahead while the cycle was still `draft`.
+- **B2 — readiness guard** (`Cycles\Show::advancePhase()`): new `scorecardsReadyForPhase()` using `PHASE_MIN_STATUS = ['appraisal'=>'appraisal','moderation'=>'moderation']` + index compare on `Scorecard::STATUSES`. **Moderation entry = HARD BLOCK** if any card below `moderation`; **appraisal entry = warn-and-allow** (preserves the designed staggered catch-up — cards reach `appraisal` at different times, see `Appraisals\Show::reviewPhasePending()`); both require ≥1 scorecard. Modal shows a per-status breakdown (red+disabled for moderation, amber+enabled for appraisal).
+- **B1 — phase-gate per-card KPI work**: `Scorecards\Show::canEdit()` + `Appraisals\Show::canVerify()` now block when cycle ∈ `{draft, moderation, closed}` (i.e. **allow active + appraisal**), mirroring `canSelfAssessCompetency()`. **CRITICAL nuance**: do NOT use a strict `=== 'active'` check — that would re-strand cards that legitimately catch up during the appraisal phase. The "not draft/moderation/closed" predicate is load-bearing.
+- **Watch-out recorded** in `watchouts.md` → "Phase-gate rules".
+
+### Bell Curve Summary (the PNSB Excel deliverable)
+- **What**: the official "BELL CURVE SUMMARY" — a 5-row table (grades worst→best) with columns **Sasaran · KB · MOD1 · MOD2 · % over target**, plus a chart overlaying those 4 series. Added to BOTH the Reports page and the Moderation overview.
+- **Engine already met the requirement** — this was a pure presentation/reporting layer on data we already store. No engine/data changes.
+- **Stage reconstruction (the key knowledge)**:
+  - **KB** (raw, pre-moderation) = `Scorecard::earnedGrade()` (derived from `final_score`; moderation preserves the score, so earned grade = original). Fallback to stored `grade` if score null.
+  - **MOD1** (after HR's first round) = the card's **latest MOD1 `after_grade`**, else KB (no MOD1 change). Reconstructed via `ModerationLog::latestByCardForRound($cycleId,'MOD1')` (one query, `orderBy('id')` then `keyBy('scorecard_id')` so last write wins — `id` is the tiebreaker, NOT `moderated_at`).
+  - **MOD2** (final) = the card's **current `grade`** = existing `BellCurveTarget::distribution()`. (`record()` keeps `scorecard.grade` authoritative, so MOD2 always == current grade.)
+  - **Sasaran** = `BellCurveTarget::targetsForHeadcount(N)`.
+- **`% over target = MOD2 ÷ Sasaran`** per grade (decoded from the Excel: 13/7=186%, 52/61=85%, 24/16=150%, 2/3=67%). Guard divide-by-zero → render `—` when Sasaran is 0 (happens for rare bands at small headcount).
+- **Code**: `BellCurveTarget::distributionBy(cards, gradeResolver)` (generalises `distribution()`) + `BellCurveTarget::summary(graded, mod1Map)` (returns targets/kb/mod1/mod2 + worst→best `rows` with `pctOverTarget` + reconciling `totals`). Wired via `#[Computed] bellCurveSummary()` on `Reports\Index` (uses `allScorecards`) and `Moderation\Index` (uses `scorecards`). View = new static partial `resources/views/livewire/moderation/_bellcurve_summary.blade.php` (4-line SVG reusing the monotone-cubic `smooth()` math, NO tween — leaves the live 2-line morph chart `_bellcurve.blade.php` untouched). Colors: Sasaran dark-dashed, KB blue, MOD1 amber, MOD2 green.
+- **Pool**: same graded pool as moderation (includes the CEO). Excluding top management from the "KB" pool is OUT OF SCOPE (would desync from the moderation pool — separate decision).
+- **MOD1 vs MOD2 recap** (for reference): MOD1 = HR, **per department**, first round; MOD2 = KPE/CEO, **org-wide**, second/final round. Both preserve the score and only move the grade band, logging every move with its round. Code switch: `Moderation\Session::round()` = `departmentId===null ? 'MOD2' : 'MOD1'`.
 
 ## Review Period Layer (Locked — flexible frequency; SUPERSEDES "annual-only")
 
@@ -224,3 +264,73 @@ Built slice-by-slice, each slice tested. **Full suite 201 green** (was 192; +9 n
 - **Export**: **CSV** = `Reports\Index::exportCsv()` streams the FILTERED final-grade report (`response()->streamDownload`, `final-grades-{year}.csv`). **Print/PDF** = `window.print()`; sidebar + topbar get `print:hidden`, `layouts/app.blade.php` gets `print:block/h-auto/overflow-visible/p-0` so content reflows, reports view has a `hidden print:block` report header. New `print:*` Tailwind utilities → ran `npm run build`.
 - **Tests**: `tests/Feature/DashboardTest.php` (3) + `tests/Feature/ReportsTest.php` (6 — access control for the 3 roles + 403 for staff/division-head, table, dept filter, breakdowns+audit, CSV stream). Also updated default `ExampleTest` (root `/` now asserts redirect to login, not 200 — consequence of the login-default-page change earlier today).
 - **Manual test data**: ran `ModerationDemoSeeder` → cycle 2025 (moderation) with 18 inflated graded scorecards; login `superadmin@` to view Dashboard curve + `/reports`.
+
+## Dashboard Enrichment + Flow-Test Seeder + DB-Design Refresh (2026-06-29)
+
+- **Admin Dashboard — 4 new widgets** (`app/Livewire/Dashboard/Index.php` + `livewire/dashboard/index.blade.php`). Brought the admin view up to the PMS+ reference density, all driven by REAL data (decided with Amirul: build these 4, **skip** the month-by-month trend chart since we only have yearly cycles — no monthly snapshots to back it honestly). Widgets (admin/HR/KPE branch only; HOD/staff untouched):
+  - **Department Performance table** — `departmentPerformance()`: scorecards `join users join departments`, grouped, avg `kpi_score`/`competency_score`/`final_score` + headcount, best dept first, status badge via `Scorecard::gradeForScore(avg_final)`.
+  - **Top Performers** — `topPerformers()`: top 5 by `final_score` desc, initials avatar + dept + score.
+  - **KPI by Category donut** — `kpiByCategory()`: `BscPerspective::withCount(active kpis)`. **Hand-rolled SVG donut** (no chart lib — matches the existing bell-curve convention), stacked `stroke-dasharray`/`stroke-dashoffset` arcs, `-rotate-90` to start at top. Hex map: Financial #c0392b, Customer #2563eb, Internal Business Process #d4a017, Learning & Growth #16a34a.
+  - **Recent Activity** — `recentActivity()`: latest 6 `ScorecardStatusLog` with `scorecard.user` + `changedBy`, "X moved to {status}" + time-ago.
+  - Scores shown on our **0–100 scale** (not PMS+'s 0–5). Every widget has an empty state. Test: `DashboardTest::test_admin_dashboard_shows_department_and_category_widgets`. **Full suite 202 green** (was 201; +1). Tailwind `bg-navy-300`/`divide-gray-50`/etc → ran `npm run build`.
+- **`FlowTestSeeder`** (`database/seeders/FlowTestSeeder.php`) — minimal end-to-end test dataset: **exactly ONE active user per role**, wired into the `manager_id` chain (CEO→HOD→exec/support), + reference data (roles, BSC, templates, depts, designations, competency items, KPI library) + **draft cycle** (the true start of the flow — leaves 0 scorecards so Amirul generates them via UI). Logins (all `password`): `superadmin@` (super-admin), `kpe@` (executive-director/CEO), `ketua.kewangan@` (division-head/HOD), `eksekutif@` (staff/executive), `sokongan@` (staff/support). Run: `php artisan migrate:fresh` then `php artisan db:seed --class=FlowTestSeeder`. **`super-admin` is whitelisted in BOTH moderation rounds** (`Moderation\Index:89`, `Moderation\Session:48-49` — MOD1=hr-admin|super-admin, MOD2=executive-director|super-admin) + lock, so these 5 users can walk the ENTIRE flow without a separate HR login.
+- **`db-design.md` REWRITTEN to match the live schema (2026-06-29)** — the old doc was the 2026-06-24 planning draft and had drifted hard. Verified against MySQL `information_schema`. Key corrections: roles via **Spatie Permission** (no `users.role` column); enums anglicised (`category` ceo/executive/support, grades excellent…needs_improvement); added the 9 real tables the draft missed (`designations`, `strategic_objectives`, `review_periods`, `scorecard_kpi_period_scores`, `scorecard_competency_period_scores`, 4 scoping pivots, Spatie `media`); documented the **snapshot architecture** (scorecard_kpis/competencies copy the definition + nullable soft-link) and **period-based scoring flow** (period scores → line → scorecard → grade). Real columns: `departments.name/code`, `kpis.title/weight/pengukuran`, `scorecards.competency_self_comment`, `score_overrides.stage/field`, renamed `tier_score`/`weighted_score`.
+- **Results page guide-text contrast bug FIXED** (`livewire/scorecards/results.blade.php:23`). The "Guide — Threshold 60 · Meet Target 80 · Stretched 100" line was `text-gold-300`, but the Tailwind config only defines gold **400/500/600** — `gold-300` emits NO color rule, so the text fell back to default dark gray and vanished on the navy header. Changed to a **gold legend chip**: `bg-gold-400 text-navy-800` rounded-full pill. Ran `npm run build`. **Watch-out**: only gold-400/500/600, navy-50…900, pnsb_red-500/600 exist in `tailwind.config.js` — referencing an undefined shade silently renders colorless text.
+
+## Cycle-Close Back-Door FIXED (2026-06-29) ✅
+
+**Bug (Amirul found):** a cycle showed status `closed` but the HOD/Executive scorecards still read **"Pending moderation"** because they were never locked. Root cause = **two ways to close a cycle**, only one safe:
+- **Safe path** `Moderation\Index::lockGrades()` (`app/Livewire/Moderation/Index.php:93`) — one DB transaction: every graded scorecard → `completed` (+`locked_at`/`locked_by` + `ScorecardStatusLog`) **then** cycle → `closed`. Gated by `canLock()` (moderation phase + scorecards present + super-admin/hr-admin).
+- **Unsafe back-door** `Cycles\Show::advancePhase()` (`app/Livewire/Cycles/Show.php:130`) — the generic phase stepper walked `moderation → closed` and stamped `closed_at` but **never touched scorecards** (its own modal admits "It does not change individual scorecards"). Closing this way left cards stuck pre-`completed`. The dashboard shows "Pending moderation" for any card not `completed`/`locked` (`_own-scorecard.blade.php:30`) → stuck forever.
+
+**Fix (prevention only — make Lock Final Grades the SOLE exit from moderation):**
+- **Layer 1 — backend guard:** `advancePhase()` now early-returns with a swal info ("Close from Moderation → use Lock Final Grades") when `next === 'closed'`. Removed the dead `closed_at` branch (it's owned by `lockGrades()`). Cycle can no longer reach `closed` via this method even on a forged request.
+- **Layer 2 — UI redirect:** in `cycles/show.blade.php`, when `$next === 'closed'` the gold "Advance to Closed" button is replaced by a purple **"Finish in Moderation → Lock Final Grades"** link to `route('moderation.index')` (`@if($next === 'closed') … @elseif($next) … @else`). Only the correct close road is visible. **Needs `npm run build`** to show.
+- `lockGrades()`/`canLock()` untouched — already correct.
+- **Test:** `CycleTest::test_a_cycle_in_moderation_cannot_be_closed_via_advance_phase` — asserts cycle stays `moderation`, `closed_at` null, scorecard untouched. **Pint passed, 18/18 CycleTest+ModerationTest green.**
+
+**Out of scope (chosen by Amirul "prevention only"):** (a) repairing the ALREADY-broken cycle is a separate one-off — reopen it to `moderation` (manual `status` flip), then HR clicks Lock Final Grades so cards lock via the proper logged path; (b) a guarded in-app "Reopen Cycle" action (recover a mis-closed cycle without tinker) — NOT built, parked.
+
+## Multi-period cycle "hanging" flow — reviewed, left as-is + KIV logged (2026-06-29)
+
+Amirul asked whether 2-/4-period cycles leave the staff hanging (key in Period 1 → done → must return later for the next period). Traced it: **NOT a bug — intentional but silent.** One status for the whole cycle; `Scorecards/Results::finalize()` is gated by `allPeriodsScored()`, so the card legitimately waits at `kpi_approved` between periods until every KPI in every period is filled, then moves to `appraisal`. **Decision: leave behaviour as-is.** Three rough edges parked as KIV (no code) — see `watchouts.md` → "Multi-period cycle 'hanging' flow": **A** no "come back" nudge on the staff dashboard, **B** `periodLocked()` ignores `opens_at` (future periods fillable early), **C** `review_periods.status` enum is decorative (never flipped).
+
+## Audit Trail Module (2026-06-30) ✅
+
+General-purpose model audit trail via **`owen-it/laravel-auditing` v14** (Amirul chose the package + "all data" scope). Branch `feat/audit-trail`, **issue #3**, 2 commits, **NOT merged** (PR into `dev` not opened yet). Fills the admin/config blind spot — the appraisal pipeline was already hand-audited (`moderation_logs`, `score_overrides`, `scorecard_status_logs`), but config edits (KPI weights, BSC weights, competency items, user/role changes) were silent.
+
+**Round 1 — recording (`daf5cab`):**
+- Installed package, published `config/audit.php` + `audits` migration (`2026_06_30_090609`). Resolves clean on Laravel 13 / PHP 8.4.
+- `Auditable` interface + trait added to **16 models**: AppraisalCycle, BellCurveTarget, BscPerspective, CompetencyItem, Department, Designation, Kpi, ReviewPeriod, Scorecard, ScorecardCompetency, ScorecardCompetencyPeriodScore, ScorecardKpi, ScorecardKpiPeriodScore, ScorecardTemplate, StrategicObjective, User. Pattern: `implements AuditableContract` (aliased) + `use Auditable` trait. (`Auditable` listed first in trait `use`.)
+- **SKIPPED on purpose** (already append-only audit records — auditing them is recursive): `ModerationLog`, `ScoreOverride`, `ScorecardStatusLog`.
+- `config/audit.php`: global `exclude => ['password','remember_token']` (secrets never logged); `console => false` (default) so **seeders/tinker DON'T record audits** — IMPORTANT gotcha (see below). `timestamps => false`.
+- `AuditTrailTest` (4): create/update/delete records, secrets excluded, log tables stay non-auditable.
+
+**Round 2 — viewer (`<2nd commit>`):**
+- **`/audit-trail`** Livewire page (`App\Livewire\Audit\Index`), route gated **`role:super-admin` ONLY** (separation of duties: log can record HR's own actions, so hr-admin must NOT read it — tighter than Reports which is super-admin|hr-admin|executive-director). Sidebar link under "Reports & Logs", `@role('super-admin')`.
+- Paginated (15) filterable table: search actor (name/email/employee_no via `whereHasMorph` on `user`), filter by model (`auditable_type`) / event / user. Color-coded event badges, inline `old → new` preview (first 4 fields + "+N more").
+- **Per-record history slide-over** — `viewHistory($type,$id)` sets `historyType`/`historyId`, `recordHistory()` computed returns that auditable's full timeline newest-first.
+- `AuditViewerTest` (5): access control (super-admin OK, other roles 403, guest→login), listing+filter, timeline.
+
+**Gotchas hit & fixed:**
+- **Console auditing OFF by default** → tests must `config(['audit.console' => true])` in `setUp()`, else NO audits record (PHPUnit runs in console). Same reason seeders stay quiet.
+- **Cross-test state leak** unmasked a strict-error during blade render ("Undefined array key" — passed in isolation, failed in full suite). Fix: moved change-formatting OUT of the Blade into a component method `changeRows(Audit): array` that pre-stringifies values (explicit null defaults) → view never touches raw audit-value keys. Cleaner + deterministic.
+- Used `bg-amber-50/text-amber-600` for the `restored` badge (NOT `gold-50` — gold only has 400/500/600 per `tailwind.config.js`).
+
+**Status:** Pint clean, `npm run build` done, **full suite 253 green** (was 248 pre-feature; +9 audit tests, -4 because... net 244→253). Verified on dev DB: ran a tinker edit-and-revert as super-admin (`config audit.console=true`) → 6 audit rows, actor "Super Admin", old/new captured, seed data unchanged. URL `http://kpi_pnsb.test/audit-trail`. **dev `audits` table is otherwise empty** (console/seeders skip auditing) — page blank until real UI edits happen.
+
+**Parked / next:** open PR into `dev`; optional follow-ups — tag-based audit grouping, retention/pruning, audit the relationship-sync pivots (kpi_department etc. aren't auto-audited), CSV export of the log.
+
+### Round 3 — auth auditing (login/logout/failed) (2026-06-30)
+
+Amirul asked "did the audit catch login user?" — it didn't (owen-it only hooks Eloquent model events). Added it:
+- **`App\Listeners\LogAuthEvents`** writes auth activity into the same `audits` table. Login & logout attach to the user (`auditable` = that user → shows in their per-record timeline); **failed logins are system-level** (user/auditable null) carrying the attempted email + IP. Events: `login` / `logout` / `login_failed`, `tags='auth'`.
+- **Migration `…094358_make_audits_auditable_nullable…`** makes `audits.auditable_type`/`auditable_id` nullable (owen-it's `morphs()` made them NOT NULL; failed logins have no model).
+- Listener mirrors the package's console rule (`shouldAudit()`) so seeders/tinker/tests don't record auth noise.
+- Viewer updated: `login`/`logout`/`login_failed` filter options + badges (emerald/gray/red), and model-less rows render "Authentication / system" with no history button; `modelOptions` excludes null types.
+- **GOTCHA (important):** Laravel 11+ **auto-discovers** listeners in `app/Listeners` (registers `handle*` methods by their type-hinted event). I ALSO added manual `Event::listen` in AppServiceProvider → **double registration → every event logged twice**. Caught it on dev (3 events → 6 rows). Fix: **remove the manual `Event::listen`**, rely on auto-discovery (AppServiceProvider::boot is back to a comment). `AuthAuditTest` now asserts **exactly 1 row per event** to guard the regression.
+- `AuthAuditTest` (4): login/logout/failed recorded correctly + not recorded when `audit.console` off. **Full suite 257 green** (253 → +4). Verified on dev (1 login + 1 failed row).
+
+### Round 4 — searchable user filter combobox (2026-06-30)
+
+Amirul: the audit-index user filter is a plain `<select>` that won't scale with many users — wanted Select2. **Decided AGAINST Select2** (would add jQuery + select2 = 2 new deps, and Select2 fights Livewire's DOM morphing — needs re-init hooks). Built a **native Alpine + Livewire searchable combobox instead** (zero deps, Amirul approved): trigger button shows the selected actor (× to clear) + a panel with an inline search input. `userSearch` filters `userOptions` **server-side** (name/employee_no) capped at **20 results** so the DOM never holds thousands of options; `selectUser`/`clearUser` actions drive `filterUser`; `userSearch` narrows only the option list, not the table. `AuditViewerTest` +1 (search-narrows-options + select/clear — asserts on the `userOptions` collection, NOT `assertSee`, because the actor's name also appears in the audit table's actor column). **Full suite 258 green.** Stack has no jQuery/Select2/TomSelect — Livewire 4 + Alpine + Tailwind + SweetAlert2 only. Branch now **4 commits**, still unmerged.

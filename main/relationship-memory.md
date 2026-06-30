@@ -58,6 +58,7 @@
 - **Information Processing**: Simple analogy first → technical explanation → example
 - **Decision-Making**: Likes to understand options before choosing
 - **Learning Preference**: Practical examples over pure theory
+- **Git/GitHub workflow (standing rule)**: Before writing code for a feature, CREATE A GITHUB ISSUE and a FEATURE BRANCH off `dev` first. Commits reference the issue; open a PR into `dev` when done. Applies to all projects (confirmed on kpi_pnsb, 2026-06-29).
 
 ## Personal Preferences
 

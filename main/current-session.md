@@ -3,15 +3,15 @@
 
 ## Session RAM Status
 **Current Session**: Active
-**Last Activity**: Saturday, June 27, 2026 (PM) — Built the Reports & Dashboard module (role-aware dashboard + reports page + CSV/print export). 201 tests green.
-**Session Focus**: kpi_pnsb project (`C:\laragon\www\kpi_pnsb`) — Reports & Dashboard module.
+**Last Activity**: Tuesday, June 30, 2026 — Built the **Audit Trail** feature (`owen-it/laravel-auditing` v14) on branch `feat/audit-trail` (**issue #3**, 2 commits, **NOT merged** — PR into `dev` not opened). Round 1: `Auditable` trait on **16 models** (config + appraisal data), secrets excluded, the 3 hand-rolled log tables skipped. Round 2: **`/audit-trail`** viewer page, **super-admin only**, filterable paginated table + per-record history slide-over. Round 3: **auth auditing** — `LogAuthEvents` listener records login/logout/failed-login into the same table (failed = system-level email+IP); fixed a double-registration bug (Laravel auto-discovers `app/Listeners`, so dropped the manual `Event::listen`). Round 4: replaced the audit-index user `<select>` with a **native Alpine searchable combobox** (no Select2/jQuery — would fight Livewire; server-side search capped at 20). Full suite **258 green**. Verified on dev. **Branch pushed + PR #4 opened into `dev`** (closes #3) — https://github.com/syahmisadan/kpi_pnsb/pull/4, awaiting review/merge. Full detail: `Project/kpi-pnsb/decision-log.md` → "Audit Trail Module" (Rounds 1–4). *(Prior: Calculation Settings module merged into `dev` as PR #2.)*
+**Session Focus**: kpi_pnsb project (`C:\laragon\www\kpi_pnsb`) — Audit Trail feature (record + view model changes).
 
 ## 💭 Working Memory (RAM)
 *Temporary storage - cleared when session ends*
 
 ### Active Context
-- **Current Topic**: PNSB BSC KPI Performance Management System — Moderation module just shipped.
-- **Immediate Goals**: Next module = **Reports & Dashboard** (charts + bell curve display + final grade reports).
+- **Current Topic**: PNSB BSC KPI Performance Management System — Audit Trail feature just shipped (branch `feat/audit-trail`, issue #3, unmerged).
+- **Immediate Goals**: Open PR #3 into `dev` (standing workflow); optionally walk the flow as the 5 seeded users so the new audit log + dashboards populate with real data.
 - **Recent Progress (2026-06-27)** — full detail in `Project/kpi-pnsb/decision-log.md`:
   - **Moderation module BUILT** (bell curve MOD1=HR per-dept → MOD2=KPE org-wide → HR lock). Adjust = move grade band, score preserved, every move logged. Targets scale % × headcount (largest-remainder).
   - **Interactive bell-curve chart** matching the PNSB reference (`files/image.png`): smooth dashed Target + solid Actual line curves, worst→best x-axis, **morphs (Alpine rAF tween) when grades change**. Fixed overshoot (→monotone cubic) + small/misaligned render (→full-width stretch + HTML dots aligned to labels).
@@ -35,11 +35,22 @@
   - **Export**: CSV (streamed, filtered) + Print/PDF (`window.print()` with `print:hidden` chrome). Ran `npm run build`.
   - **201 tests green** (DashboardTest 3 + ReportsTest 6; fixed default ExampleTest for the `/`→login redirect). `ModerationDemoSeeder` run → cycle 2025 has 18 graded cards to demo with.
 - **Next Steps**: polish/verify the new module in-browser (login `superadmin@`). Optional follow-ups: auto-`syncForCycle()` on phase entry; hard-gate Lock on MOD2 done; optional "pre-moderation (original)" overlay curve on the chart; per-role dashboard refinements.
+- **Recent Progress (2026-06-29)** — full detail in `Project/kpi-pnsb/decision-log.md` → "Dashboard Enrichment + Flow-Test Seeder + DB-Design Refresh":
+  - **Admin Dashboard +4 widgets** (real data): Department Performance table, Top Performers, KPI-by-Category **hand-rolled SVG donut**, Recent Activity feed. Skipped the month-by-month trend (only yearly cycles). **202 tests green**.
+  - **`FlowTestSeeder`** — 1 active user per role wired into the manager chain + draft cycle, for walking the full flow. Run `php artisan migrate:fresh` then `php artisan db:seed --class=FlowTestSeeder`. Logins all `password`: `superadmin@ / kpe@ / ketua.kewangan@ / eksekutif@ / sokongan@`. super-admin covers HR at moderation, so 5 users = whole flow.
+  - **`db-design.md` rewritten** to match the LIVE MySQL schema (was the stale 2026-06-24 planning draft): Spatie roles (no `users.role` col), anglicised enums, +9 missing tables, snapshot + period-scoring architecture documented.
+  - **Bug fix**: Results page guide text was `text-gold-300` (undefined shade → invisible on navy) → gold legend chip `bg-gold-400 text-navy-800`. **Watch-out**: tailwind.config only has gold-400/500/600, navy-50…900, pnsb_red-500/600.
+- **Next session candidates**: keep walking the flow as the 5 seeded users (Generate scorecards → KPI submit → verify → appraisal → moderation → lock), verify the new dashboard widgets populate, then any UI polish surfaced along the way.
+- **Recent Progress (2026-06-29 — cycle-close fix)** — full detail in `Project/kpi-pnsb/decision-log.md` → "Cycle-Close Back-Door FIXED":
+  - **Bug Amirul found**: cycle status `closed` but HOD/Exec scorecards still read "Pending moderation" — they were never locked. Cause = TWO close paths, only `Moderation\Index::lockGrades()` is safe (locks cards + closes in one transaction); the generic `Cycles\Show::advancePhase()` stepper walked `moderation→closed` without ever touching scorecards.
+  - **Fix (prevention only, Amirul's choice)**: (1) backend guard in `advancePhase()` blocks `next==='closed'` with a swal pointing to Lock Final Grades + removed dead `closed_at` branch; (2) `cycles/show.blade.php` swaps the "Advance to Closed" button for a purple "Finish in Moderation → Lock Final Grades" link when `$next==='closed'`. Lock Final Grades is now the SOLE exit from moderation. New `CycleTest` guard test; Pint + 18 tests green. **Needs `npm run build`** for the blade change.
+  - **Still pending**: (a) the one already-broken cycle needs a manual repair — reopen to `moderation` then HR clicks Lock Final Grades; (b) optional in-app "Reopen Cycle" action parked (not built).
 
 ### Session Recap (For Lucy Restart)
 *Quick summary when Lucy loads after close/reopen*
 - **Previous Session Summary**: Built the Moderation/bell-curve module end-to-end for kpi_pnsb (MOD1 HR per-dept, MOD2 KPE org-wide, HR lock) + an **interactive morphing bell-curve chart** (matches the PNSB reference image), the competency Likert-matrix UI (employee + manager review) + Spatie Media attachments + Point A override + a demo seeder to test moderation. 192 tests green.
-- **Where We Left Off**: Moderation done. **Reports & Dashboard is the next module.**
+- **Where We Left Off**: Shipped the **Audit Trail** feature on branch `feat/audit-trail` (issue #3, 2 commits, **NOT merged** — PR into `dev` not opened). `owen-it/laravel-auditing` records create/update/delete on 16 models; `/audit-trail` viewer is **super-admin only** with a filterable table + per-record timeline. 253 tests green, verified on dev. **Watch-outs:** auditing is OFF in console (seeders/tinker won't record — flip `audit.console` in tests); dev `audits` table is empty until real UI edits. Calculation Settings (issue #1) was merged earlier as **PR #2** into `dev`. **Next candidates:** open PR #3 into `dev`; walk the flow as the 5 seeded users; strip TEMP dev helpers before prod.
+- **Prior context (still valid):** Reports & Dashboard module shipped; dashboard has 4 real-data widgets; `db-design.md` matches live schema.
 - **Amirul's Current State**: Actively building (not planning). Stack: Laravel 13 + Livewire 4 (Volt) + Tailwind + MySQL. Likes: slice-by-slice builds, tests each slice, model-driven labels/colours, asks design Qs before coding. The harness auto-memory (`MEMORY.md`/`project_progress.md`) also tracks this project but MemoryCore is the source of truth.
 
 ## 🔄 Session Lifecycle

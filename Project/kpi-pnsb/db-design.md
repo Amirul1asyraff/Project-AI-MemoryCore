@@ -1,448 +1,378 @@
 # PNSB BSC KPI — Database Design
-> Follows locked ALP guidelines. See Change Impact section for B3/B4 contingency columns.
-> Last updated: 2026-06-24
+
+> **Reflects the actually-built schema** (verified against the live MySQL `information_schema`).
+> Stack: Laravel 13 + Livewire 4 (Volt) + MySQL. Spatie Permission for roles; Spatie Media Library for attachments.
+> Last updated: 2026-06-29 (rewritten from the 2026-06-24 planning draft to match the implemented system)
 
 ---
 
 ## Design Principles
 
-- All scoring rules are **ALP Board ketetapan** — stored as data, not hardcoded logic
-- `manager_id` chain on `users` drives the entire review hierarchy
-- Both self-rating and manager rating always saved — immutable audit trail
-- Status progression is one-way and logged on every change
-- Enums used for ALP-locked values; VARCHAR for anything HR might extend later
+- All scoring rules are **ALP Board ketetapan** — stored as data (templates, perspective weights, bell-curve targets), not hardcoded.
+- `manager_id` chain on `users` drives the entire review hierarchy.
+- **Snapshot architecture**: `scorecard_kpis` / `scorecard_competencies` copy the KPI/competency definition (title, uom, type…) at assignment time, so a historical scorecard stays stable even if the library is later edited. `kpi_id` / `competency_item_id` are kept (nullable) as a soft link back to the source.
+- **Period-based scoring**: each scorecard KPI/competency is scored once per `review_period` (Mid-Year, Year-End), then aggregated into the line on `scorecard_kpis` / `scorecard_competencies`, then into the scorecard totals.
+- Status progression is one-way and logged on every change (`scorecard_status_logs`).
+- Enums for ALP-locked values; VARCHAR for anything HR might extend later.
+- `softDeletes` on the master/reference tables (users, departments, designations, kpis, scorecards, cycles, perspectives, templates, competency_items, review_periods, strategic_objectives, bell_curve_targets).
+
+---
+
+## Roles & Categories
+
+**Roles** are managed by **Spatie Permission** (`roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions`) — there is **no `role` column** on `users`. The 5 system roles:
+
+| Role | Purpose | Appraised? |
+|---|---|---|
+| `super-admin` | Full system admin; stands in for HR at moderation/lock | No |
+| `hr-admin` | HR operations, moderation MOD1, lock | No |
+| `executive-director` | CEO / KPE — top of chain, runs moderation MOD2 | Yes (CEO template) |
+| `division-head` | Ketua Bahagian — reviews subordinates **and** is reviewed | Yes (Executive template) |
+| `staff` | Executive or Support employees | Yes |
+
+**`users.category`** (`ceo` / `executive` / `support`) is separate from role — it selects the scorecard template / scoring formula. A `division-head` is `category = executive`. Admin roles (`super-admin`, `hr-admin`) are excluded from scorecard generation regardless of category.
 
 ---
 
 ## Tables
 
----
-
 ### 1. `departments`
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-name_my         VARCHAR(150) NOT NULL,               -- e.g. Bahagian Sumber Manusia
-name_en         VARCHAR(150) NOT NULL,               -- e.g. Human Resources
-parent_id       BIGINT UNSIGNED NULL,                -- NULL = top-level
-head_user_id    BIGINT UNSIGNED NULL,                -- FK users (set after users created)
-created_at      TIMESTAMP,
-updated_at      TIMESTAMP
+```
+id            bigint PK
+name          varchar(150)
+code          varchar(50) UNIQUE
+parent_id     bigint NULL → departments.id
+head_user_id  bigint NULL → users.id (set after users created)
+is_active     boolean
+deleted_at, timestamps
 ```
 
----
-
-### 2. `users`
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-name            VARCHAR(150) NOT NULL,
-employee_no     VARCHAR(50) UNIQUE NOT NULL,
-email           VARCHAR(150) UNIQUE NOT NULL,
-password        VARCHAR(255) NOT NULL,
-job_title       VARCHAR(150) NULL,                   -- D3: pending exact titles
-department_id   BIGINT UNSIGNED NOT NULL,            -- FK departments
-manager_id      BIGINT UNSIGNED NULL,                -- FK users (NULL = KPE)
-category        ENUM(
-                  'kpe',
-                  'eksekutif_pengurusan_kanan',
-                  'sokongan_teknikal'
-                ) NOT NULL,                          -- drives scoring template
-role            ENUM(
-                  'super_admin',
-                  'hr_admin',
-                  'kpe',
-                  'ketua_bahagian',
-                  'kakitangan'
-                ) NOT NULL,
-is_active       BOOLEAN DEFAULT TRUE,
-created_at      TIMESTAMP,
-updated_at      TIMESTAMP
+### 2. `designations`  *(new since planning — replaces free-text job_title)*
+```
+id            bigint PK
+name          varchar(150)
+short_name    varchar(50)          -- e.g. CEO, FM, FE, ITM, HRM
+department_id bigint → departments.id
+description   text NULL
+is_active     boolean
+deleted_at, timestamps
 ```
 
-> A user has both `category` (determines scoring formula) and `role` (determines system permissions).
-> A Ketua Bahagian is `category = eksekutif_pengurusan_kanan` and `role = ketua_bahagian` — they have their own scorecard AND review their team.
+### 3. `users`
+```
+id              bigint PK
+name            varchar(255)
+employee_no     varchar(50) UNIQUE
+email           varchar(255) UNIQUE
+department_id   bigint NULL → departments.id
+designation_id  bigint NULL → designations.id
+manager_id      bigint NULL → users.id   (self-referential; NULL = top of chain / admins)
+category        enum('ceo','executive','support')   -- drives scoring template
+is_active       boolean
+email_verified_at timestamp NULL
+password        varchar(255)
+remember_token  varchar(100) NULL
+deleted_at, timestamps
+```
+> Permissions come from Spatie role assignments, **not** a column here.
 
----
-
-### 3. `appraisal_cycles`
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-year            YEAR NOT NULL UNIQUE,
-status          ENUM(
-                  'draft',
-                  'active',           -- KPI setting phase open
-                  'appraisal',        -- year-end scoring phase
-                  'moderation',       -- bell curve moderation
-                  'closed'
-                ) DEFAULT 'draft',
-opened_by       BIGINT UNSIGNED NOT NULL,            -- FK users (HR Admin)
-opened_at       TIMESTAMP NULL,
-closed_at       TIMESTAMP NULL,
-created_at      TIMESTAMP,
-updated_at      TIMESTAMP
+### 4. `appraisal_cycles`
+```
+id         bigint PK
+year       year UNIQUE
+status     enum('draft','active','appraisal','moderation','closed')  -- one-way lifecycle
+opened_by  bigint → users.id
+opened_at  timestamp NULL
+closed_at  timestamp NULL
+deleted_at, timestamps
 ```
 
----
-
-### 4. `bsc_perspectives`
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-name_my         VARCHAR(100) NOT NULL,               -- e.g. Kewangan
-name_en         VARCHAR(100) NOT NULL,               -- e.g. Financial
-weight          DECIMAL(5,2) NOT NULL,               -- 40.00, 30.00, 20.00, 10.00
-sort_order      TINYINT UNSIGNED NOT NULL,
-created_at      TIMESTAMP,
-updated_at      TIMESTAMP
+### 5. `review_periods`  *(new — half-yearly scoring windows under a cycle)*
+```
+id         bigint PK
+cycle_id   bigint → appraisal_cycles.id
+sequence   tinyint               -- 1, 2
+label      varchar(255)          -- 'Mid-Year', 'Year-End'
+weight     decimal(5,2)          -- 50.00 each
+is_final   boolean               -- the period that closes the year
+opens_at   timestamp NULL
+closes_at  timestamp NULL
+status     enum('upcoming','open','scored','closed')
+deleted_at, timestamps
 ```
 
-**Seed data (fixed — ALP ketetapan):**
+### 6. `bsc_perspectives`
+```
+id          bigint PK
+name        varchar(100)          -- Financial / Customer / Internal Business Process / Learning & Growth
+description text NULL
+weight      decimal(5,2)          -- 40 / 30 / 20 / 10
+sort_order  tinyint
+deleted_at, timestamps
+```
+**Seed (ALP-locked):** Financial 40 · Customer 30 · Internal Business Process 20 · Learning & Growth 10.
 
-| sort_order | name_my | name_en | weight |
-|---|---|---|---|
-| 1 | Kewangan | Financial | 40.00 |
-| 2 | Pelanggan | Customer | 30.00 |
-| 3 | Proses Dalaman | Internal Business Process | 20.00 |
-| 4 | Pembelajaran & Peningkatan | Learning & Growth | 10.00 |
-
----
-
-### 5. `kpis`
-
-```sql
-id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-title_my            VARCHAR(255) NOT NULL,
-title_en            VARCHAR(255) NULL,
-bsc_perspective_id  BIGINT UNSIGNED NOT NULL,        -- FK bsc_perspectives
-uom                 VARCHAR(100) NOT NULL,            -- e.g. RM, Tarikh, Bil, %
-level               ENUM('company', 'department', 'individual') NOT NULL,
-category_scope      VARCHAR(50) NULL,                -- B4: NULL = all, or 'kpe' / 'eksekutif_pengurusan_kanan'
-is_active           BOOLEAN DEFAULT TRUE,
-created_by          BIGINT UNSIGNED NOT NULL,        -- FK users
-created_at          TIMESTAMP,
-updated_at          TIMESTAMP
+### 7. `strategic_objectives`  *(new — objectives under each perspective)*
+```
+id                 bigint PK
+bsc_perspective_id bigint → bsc_perspectives.id
+name               varchar(150)
+description        text NULL
+sort_order         tinyint
+is_active          boolean
+deleted_at, timestamps
 ```
 
-> `category_scope` is pre-added for B4. NULL means KPI applies to all KPI-scoring categories.
+### 8. `kpis`
+```
+id                     bigint PK
+title                  varchar(255)
+bsc_perspective_id     bigint → bsc_perspectives.id
+strategic_objective_id bigint NULL → strategic_objectives.id
+uom                    varchar(100)          -- RM, %, Hari, Bil, Tarikh…
+pengukuran             varchar(255) NULL     -- measurement description
+weight                 decimal(5,2)          -- suggested default weight
+level                  enum('company','department','individual')   -- cascade scope
+is_active              boolean
+created_by             bigint → users.id
+deleted_at, timestamps
+```
+**Cascade scoping pivots:**
+- `kpi_department` (kpi_id, department_id) — for `level = department`
+- `kpi_designation` (kpi_id, designation_id) — for `level = individual`
+- `level = company` cascades to every KPI-based employee (no pivot rows).
 
----
+### 9. `scorecard_templates`
+```
+id                 bigint PK
+category           enum('ceo','executive','support') UNIQUE
+kpi_weight         decimal(5,2)
+competency_weight  decimal(5,2)
+competency_method  varchar(50) NULL   -- currently 'average'
+deleted_at, timestamps
+```
+**Seed (ALP-locked):** ceo 100/0 · executive 80/20 · support 0/100.
 
-### 6. `scorecard_templates`
+### 10. `competency_items`
+```
+id                 bigint PK
+title              varchar(255)
+description        text NULL
+type               enum('core','functional')
+level_descriptions json NULL          -- Likert level text (1..n descriptions)
+is_active          boolean
+deleted_at, timestamps
+```
+**Scoping pivots:** `competency_item_department`, `competency_item_designation` (functional competencies scoped to dept/designation; core apply to all).
 
-```sql
-id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-category            ENUM(
-                      'kpe',
-                      'eksekutif_pengurusan_kanan',
-                      'sokongan_teknikal'
-                    ) NOT NULL UNIQUE,
-kpi_weight          DECIMAL(5,2) NOT NULL,           -- 100.00 / 80.00 / 0.00
-competency_weight   DECIMAL(5,2) NOT NULL,           -- 0.00 / 20.00 / 100.00
-competency_method   VARCHAR(50) NULL,                -- B3: 'override' / 'weighted' / etc — NULL until decided
-created_at          TIMESTAMP,
-updated_at          TIMESTAMP
+### 11. `scorecards`
+```
+id                      bigint PK
+user_id                 bigint → users.id
+cycle_id                bigint → appraisal_cycles.id
+template_id             bigint → scorecard_templates.id
+status                  enum('draft','kpi_submitted','kpi_approved','appraisal','moderation','completed','locked')
+kpi_score               decimal(5,2) NULL     -- Σ weighted_score of scorecard_kpis
+competency_score        decimal(5,2) NULL     -- AVG final_rating of scorecard_competencies
+competency_self_comment text NULL             -- employee overall self-assessment comment
+final_score             decimal(5,2) NULL     -- (kpi_score×kpi_weight + competency_score×competency_weight)/100, 0–100 scale
+grade                   enum('excellent','very_good','good','satisfactory','needs_improvement') NULL
+locked_at               timestamp NULL
+locked_by               bigint NULL → users.id
+deleted_at, timestamps
+UNIQUE (user_id, cycle_id)
+```
+**Competency attachments:** stored via Spatie Media Library (`media` table, collection `competency_attachments`).
+
+**Grade auto-assignment (C5, on `final_score`):** ≥90 excellent · ≥76 very_good · ≥60 good · ≥50 satisfactory · <50 needs_improvement.
+
+### 12. `scorecard_kpis`  *(snapshot of an assigned KPI)*
+```
+id                 bigint PK
+scorecard_id       bigint → scorecards.id
+kpi_id             bigint NULL → kpis.id        -- soft link to source
+bsc_perspective_id bigint → bsc_perspectives.id (denormalised)
+kpi_title          varchar(255)                 -- snapshot
+objective_name     varchar(255) NULL            -- snapshot
+uom                varchar(100)                 -- snapshot
+pengukuran         varchar(255) NULL            -- snapshot
+kpi_weight         decimal(5,2)                 -- Jumlah Kecil Pemberat
+threshold          varchar(100) NULL            -- Ambangan
+meet_target        varchar(100) NULL            -- Setuju
+stretched          varchar(100) NULL            -- Lebihan
+actual             varchar(100) NULL            -- aggregated raw value
+tier_score         decimal(5,2) NULL            -- 0 / 60 / 80 / 100
+weighted_score     decimal(5,2) NULL            -- tier_score/100 × kpi_weight
+notes              text NULL
+timestamps
+```
+**Tier scoring (C7):** Below Threshold 0 · Threshold 60 · Meet Target 80 · Stretched 100.
+
+### 13. `scorecard_kpi_period_scores`  *(new — per review-period KPI actuals)*
+```
+id                bigint PK
+scorecard_kpi_id  bigint → scorecard_kpis.id
+review_period_id  bigint → review_periods.id
+actual            varchar(100) NULL
+tier_score        decimal(5,2) NULL
+weighted_score    decimal(5,2) NULL
+notes             text NULL
+timestamps
 ```
 
-**Seed data (fixed — ALP ketetapan):**
-
-| category | kpi_weight | competency_weight |
-|---|---|---|
-| kpe | 100.00 | 0.00 |
-| eksekutif_pengurusan_kanan | 80.00 | 20.00 |
-| sokongan_teknikal | 0.00 | 100.00 |
-
----
-
-### 7. `scorecards`
-
-```sql
-id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-user_id             BIGINT UNSIGNED NOT NULL,        -- FK users
-cycle_id            BIGINT UNSIGNED NOT NULL,        -- FK appraisal_cycles
-template_id         BIGINT UNSIGNED NOT NULL,        -- FK scorecard_templates
-status              ENUM(
-                      'draft',                       -- not yet submitted
-                      'kpi_submitted',               -- staff submitted KPI targets
-                      'kpi_approved',                -- manager approved KPI targets
-                      'appraisal',                   -- year-end scoring in progress
-                      'moderation',                  -- under bell curve moderation
-                      'completed',                   -- final grade assigned
-                      'locked'                       -- immutable, communicated to staff
-                    ) DEFAULT 'draft',
-kpi_score           DECIMAL(5,2) NULL,               -- computed from scorecard_kpis
-competency_score    DECIMAL(5,2) NULL,               -- computed from scorecard_competencies
-final_score         DECIMAL(5,2) NULL,               -- kpi_score * kpi_weight + competency_score * competency_weight
-grade               ENUM(
-                      'cemerlang',
-                      'sangat_baik',
-                      'baik',
-                      'memuaskan',
-                      'perlu_diperbaiki'
-                    ) NULL,
-locked_at           TIMESTAMP NULL,
-locked_by           BIGINT UNSIGNED NULL,            -- FK users (HR Admin)
-created_at          TIMESTAMP,
-updated_at          TIMESTAMP,
-
-UNIQUE KEY uq_user_cycle (user_id, cycle_id)
+### 14. `scorecard_competencies`  *(snapshot of an assessed competency)*
+```
+id                    bigint PK
+scorecard_id          bigint → scorecards.id
+competency_item_id    bigint NULL → competency_items.id   -- soft link to source
+competency_title      varchar(255)                        -- snapshot
+competency_type       enum('core','functional')           -- snapshot
+self_rating           decimal(5,2) NULL                   -- Penilaian Kendiri
+manager_rating        decimal(5,2) NULL                   -- Penilaian Pengurus (override, FINAL)
+final_rating          decimal(5,2) NULL
+manager_justification text NULL
+timestamps
 ```
 
-**Grade auto-assignment rule (C5):**
-
-| final_score | grade |
-|---|---|
-| >= 90 | cemerlang |
-| >= 76 | sangat_baik |
-| >= 60 | baik |
-| >= 50 | memuaskan |
-| < 50 | perlu_diperbaiki |
-
----
-
-### 8. `scorecard_kpis`
-
-```sql
-id                      BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-scorecard_id            BIGINT UNSIGNED NOT NULL,    -- FK scorecards
-kpi_id                  BIGINT UNSIGNED NOT NULL,    -- FK kpis
-bsc_perspective_id      BIGINT UNSIGNED NOT NULL,    -- FK bsc_perspectives (denormalised for query speed)
-kpi_weight              DECIMAL(5,2) NOT NULL,       -- Jumlah Kecil Pemberat e.g. 20.00
-threshold               VARCHAR(100) NOT NULL,       -- Ambangan — VARCHAR supports RM, date, text
-meet_target             VARCHAR(100) NOT NULL,       -- Setuju
-stretched               VARCHAR(100) NOT NULL,       -- Lebihan
-actual                  VARCHAR(100) NULL,           -- Pencapaian Sebenar (raw value)
-pencapaian_sebenar      DECIMAL(5,2) NULL,           -- Converted tier score: 0 / 60 / 80 / 100
-skor                    DECIMAL(5,2) NULL,           -- pencapaian_sebenar / 100 * kpi_weight
-notes                   TEXT NULL,                   -- Catatan
-created_at              TIMESTAMP,
-updated_at              TIMESTAMP
+### 15. `scorecard_competency_period_scores`  *(new — per review-period competency ratings)*
+```
+id                       bigint PK
+scorecard_competency_id  bigint → scorecard_competencies.id
+review_period_id         bigint → review_periods.id
+self_rating              decimal(5,2) NULL
+manager_rating           decimal(5,2) NULL
+final_rating             decimal(5,2) NULL
+manager_justification    text NULL
+timestamps
 ```
 
-**Tier scoring logic (C7 — locked):**
+### 16. `bell_curve_targets`
+```
+id           bigint PK
+cycle_id     bigint → appraisal_cycles.id
+grade        enum('excellent','very_good','good','satisfactory','needs_improvement')
+target_count int
+target_pct   decimal(5,2)
+timestamps, deleted_at
+UNIQUE (cycle_id, grade)
+```
+Targets scale to headcount (largest-remainder). Reference distribution (per ~91 staff): excellent 3.3% · very_good 17.58% · good 67.03% · satisfactory 7.69% · needs_improvement 4.4%.
 
-| Tier achieved | pencapaian_sebenar |
-|---|---|
-| Below Threshold | 0 |
-| Threshold (Ambangan) | 60 |
-| Meet Target (Setuju) | 80 |
-| Stretched (Lebihan) | 100 |
+### 17. `moderation_logs`
+```
+id           bigint PK
+scorecard_id bigint → scorecards.id
+cycle_id     bigint → appraisal_cycles.id
+round        enum('MOD1','MOD2')          -- MOD1 = HR per-dept, MOD2 = KPE org-wide
+before_score / after_score  decimal(5,2) NULL
+before_grade / after_grade  enum(...grades...) NULL
+moderated_by bigint → users.id
+notes        text NULL
+moderated_at timestamp
+timestamps
+```
+> A moderation "adjust" moves the grade band; the raw score is preserved, every move logged here.
 
-`kpi_score` on `scorecards` = SUM(skor) across all scorecard_kpis for that scorecard.
-
----
-
-### 9. `competency_items`
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-title_my        VARCHAR(255) NOT NULL,
-title_en        VARCHAR(255) NULL,
-description     TEXT NULL,
-type            ENUM('core', 'functional') NOT NULL,
-is_active       BOOLEAN DEFAULT TRUE,
-created_at      TIMESTAMP,
-updated_at      TIMESTAMP
+### 18. `score_overrides`  *(audit of manager/verification overrides)*
+```
+id            bigint PK
+scorecard_id  bigint → scorecards.id
+override_type enum('kpi','competency')
+stage         varchar(30)            -- e.g. verification / appraisal
+field         varchar(50) NULL
+field_ref_id  bigint NULL            -- scorecard_kpis.id or scorecard_competencies.id
+before_value  varchar(255) NULL
+after_value   varchar(255)
+overridden_by bigint → users.id
+notes         text NULL
+overridden_at timestamp
+timestamps
 ```
 
-> D2: Actual PNSB competency items pending from HR — needed for seeding.
-
----
-
-### 10. `scorecard_competencies`
-
-```sql
-id                      BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-scorecard_id            BIGINT UNSIGNED NOT NULL,    -- FK scorecards
-competency_item_id      BIGINT UNSIGNED NOT NULL,    -- FK competency_items
-self_rating             DECIMAL(5,2) NULL,           -- Penilaian Kendiri (0–100)
-manager_rating          DECIMAL(5,2) NULL,           -- Penilaian Pengurus (0–100) — manager override, FINAL
-final_rating            DECIMAL(5,2) NULL,           -- derived per B3 method
-manager_justification   TEXT NULL,                   -- B3: used if deviation threshold exceeded
-created_at              TIMESTAMP,
-updated_at              TIMESTAMP,
-
-UNIQUE KEY uq_scorecard_competency (scorecard_id, competency_item_id)
+### 19. `scorecard_status_logs`  *(full status-change audit; feeds dashboard "Recent Activity")*
+```
+id           bigint PK
+scorecard_id bigint → scorecards.id
+from_status  varchar(50) NULL   -- NULL = initial creation
+to_status    varchar(50)
+changed_by   bigint → users.id
+notes        text NULL
+changed_at   timestamp
+timestamps
 ```
 
-> `manager_rating` is the override value — always becomes `final_rating` under current ALP guidelines (C1).
-> `manager_justification` pre-added for B3 deviation safeguard scenario.
+### 20. `media`  *(Spatie Media Library — competency evidence files)*
+Standard Spatie schema (`model_type`, `model_id`, `collection_name`, `file_name`, `mime_type`, `disk`, `size`, json props…). Collection `competency_attachments` is attached to `Scorecard`.
 
-`competency_score` on `scorecards` = AVG(final_rating) across all scorecard_competencies for that scorecard.
-
----
-
-### 11. `bell_curve_targets`
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-cycle_id        BIGINT UNSIGNED NOT NULL,            -- FK appraisal_cycles
-grade           ENUM(
-                  'cemerlang',
-                  'sangat_baik',
-                  'baik',
-                  'memuaskan',
-                  'perlu_diperbaiki'
-                ) NOT NULL,
-target_count    INT UNSIGNED NOT NULL,               -- e.g. 3
-target_pct      DECIMAL(5,2) NOT NULL,               -- e.g. 3.30
-created_at      TIMESTAMP,
-updated_at      TIMESTAMP,
-
-UNIQUE KEY uq_cycle_grade (cycle_id, grade)
-```
-
-**Seed data per cycle (based on 91 staff — scales per headcount):**
-
-| grade | target_count | target_pct |
-|---|---|---|
-| cemerlang | 3 | 3.30 |
-| sangat_baik | 16 | 17.58 |
-| baik | 61 | 67.03 |
-| memuaskan | 7 | 7.69 |
-| perlu_diperbaiki | 4 | 4.40 |
-
----
-
-### 12. `moderation_logs`
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-scorecard_id    BIGINT UNSIGNED NOT NULL,            -- FK scorecards
-cycle_id        BIGINT UNSIGNED NOT NULL,            -- FK appraisal_cycles
-round           ENUM('MOD1', 'MOD2') NOT NULL,       -- MOD1 = HR, MOD2 = KPE
-before_score    DECIMAL(5,2) NULL,
-after_score     DECIMAL(5,2) NULL,
-before_grade    ENUM('cemerlang','sangat_baik','baik','memuaskan','perlu_diperbaiki') NULL,
-after_grade     ENUM('cemerlang','sangat_baik','baik','memuaskan','perlu_diperbaiki') NULL,
-moderated_by    BIGINT UNSIGNED NOT NULL,            -- FK users
-notes           TEXT NULL,
-moderated_at    TIMESTAMP NOT NULL,
-created_at      TIMESTAMP
-```
-
----
-
-### 13. `score_overrides`
-
-> Audit trail — every time a manager overrides a KPI or Competency score, a record is written here.
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-scorecard_id    BIGINT UNSIGNED NOT NULL,            -- FK scorecards
-override_type   ENUM('kpi', 'competency') NOT NULL,
-field_ref_id    BIGINT UNSIGNED NULL,                -- FK scorecard_kpis.id or scorecard_competencies.id
-before_value    DECIMAL(5,2) NULL,
-after_value     DECIMAL(5,2) NOT NULL,
-overridden_by   BIGINT UNSIGNED NOT NULL,            -- FK users (manager)
-notes           TEXT NULL,
-overridden_at   TIMESTAMP NOT NULL,
-created_at      TIMESTAMP
-```
-
----
-
-### 14. `scorecard_status_logs`
-
-> Full audit of every scorecard status change.
-
-```sql
-id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-scorecard_id    BIGINT UNSIGNED NOT NULL,            -- FK scorecards
-from_status     VARCHAR(50) NULL,                    -- NULL = initial creation
-to_status       VARCHAR(50) NOT NULL,
-changed_by      BIGINT UNSIGNED NOT NULL,            -- FK users
-notes           TEXT NULL,
-changed_at      TIMESTAMP NOT NULL,
-created_at      TIMESTAMP
-```
+### Framework / package tables
+`roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions` (Spatie Permission); plus standard Laravel `migrations`, `sessions`, `cache`, `jobs`, `password_reset_tokens`.
 
 ---
 
 ## Relationships Summary
 
 ```
+departments ──< designations
 departments ──< users (department_id)
+designations ──< users (designation_id)
 users ──< users (manager_id — self-referential hierarchy)
 
+appraisal_cycles ──< review_periods
 appraisal_cycles ──< scorecards
-users ──< scorecards
-scorecard_templates ──< scorecards
-
-scorecards ──< scorecard_kpis
-kpis ──< scorecard_kpis
-bsc_perspectives ──< scorecard_kpis
-
-scorecards ──< scorecard_competencies
-competency_items ──< scorecard_competencies
-
 appraisal_cycles ──< bell_curve_targets
-scorecards ──< moderation_logs
-scorecards ──< score_overrides
-scorecards ──< scorecard_status_logs
+appraisal_cycles ──< moderation_logs
 
+bsc_perspectives ──< strategic_objectives ──< kpis
 bsc_perspectives ──< kpis
+kpis >──< departments (kpi_department)
+kpis >──< designations (kpi_designation)
+
+users ──< scorecards >── scorecard_templates
+scorecards ──< scorecard_kpis ──< scorecard_kpi_period_scores >── review_periods
+scorecards ──< scorecard_competencies ──< scorecard_competency_period_scores >── review_periods
+kpis ──< scorecard_kpis           (soft link, nullable)
+bsc_perspectives ──< scorecard_kpis (denormalised)
+competency_items ──< scorecard_competencies (soft link, nullable)
+competency_items >──< departments / designations (scoping pivots)
+
+scorecards ──< moderation_logs / score_overrides / scorecard_status_logs
+scorecards ──< media (competency_attachments)
 ```
 
 ---
 
-## Key Indexes
+## Score Flow (how a number becomes a grade)
 
-```sql
--- scorecards
-INDEX idx_scorecards_user_cycle (user_id, cycle_id)
-INDEX idx_scorecards_cycle_status (cycle_id, status)
-INDEX idx_scorecards_grade (cycle_id, grade)
-
--- scorecard_kpis
-INDEX idx_scorecard_kpis_scorecard (scorecard_id)
-INDEX idx_scorecard_kpis_bsc (bsc_perspective_id)
-
--- scorecard_competencies
-INDEX idx_scorecard_comp_scorecard (scorecard_id)
-
--- users
-INDEX idx_users_manager (manager_id)
-INDEX idx_users_department (department_id)
-INDEX idx_users_category (category)
-
--- moderation_logs
-INDEX idx_mod_logs_cycle_round (cycle_id, round)
-```
+1. **Per review period** → `scorecard_kpi_period_scores.weighted_score` & `scorecard_competency_period_scores.final_rating` captured.
+2. **Aggregate to line** → `scorecard_kpis.weighted_score` (period-weighted) & `scorecard_competencies.final_rating`.
+3. **Aggregate to scorecard** → `kpi_score` = Σ weighted_score; `competency_score` = AVG final_rating.
+4. **Final** → `final_score = (kpi_score × kpi_weight + competency_score × competency_weight) / 100` (all 0–100 scale).
+5. **Grade** auto-assigned from C5 thresholds → optionally re-banded in moderation (score preserved).
 
 ---
 
-## Business Rules (enforced at application layer)
+## Business Rules (application layer)
 
-| Rule | Where Enforced |
+| Rule | Where |
 |---|---|
-| `sokongan_teknikal` → no `scorecard_kpis` created | Service layer on scorecard creation |
-| `kpe` → no `scorecard_competencies` created | Service layer on scorecard creation |
-| `manager_rating` always becomes `final_rating` (C1) | Competency score service |
-| `pencapaian_sebenar` only ever = 0, 60, 80, 100 (C7) | KPI score service |
-| `final_score` = `(kpi_score × kpi_weight/100) + (competency_score × competency_weight/100)` — all values on 0–100 scale, NOT /5 | Score calculation service |
-| Grade auto-assigned from `final_score` thresholds (C5) | Grade assignment service |
-| BSC weights must sum to 100% | Validation on `bsc_perspectives` update |
-| KPI `kpi_weight` per BSC perspective must sum to that perspective's weight | Validation on scorecard_kpis |
-| Only `super_admin` can update `scorecard_templates` weights (ALP ketetapan — C3) | Role gate |
-| Scorecard status is one-way — cannot revert | Status transition guard |
+| `support` → no `scorecard_kpis` (0% KPI weight) | Scorecard generation |
+| `ceo` → no `scorecard_competencies` (0% competency weight) | Scorecard generation |
+| Admin roles (`super-admin`, `hr-admin`) excluded from scorecard generation | `eligibleEmployees()` |
+| `manager_rating` becomes `final_rating` (C1) | Competency scoring |
+| `tier_score` only ever 0 / 60 / 80 / 100 (C7) | KPI scoring |
+| `final_score` on 0–100 scale (not /5) | Score calc |
+| Grade from `final_score` thresholds (C5) | Grade assignment |
+| BSC weights sum to 100; KPI weights per perspective sum to that perspective's weight | Validation |
+| Moderation MOD1 = `hr-admin`/`super-admin`; MOD2 = `executive-director`/`super-admin` | Moderation gates |
+| Scorecard status is one-way | Status transition guard |
 
 ---
 
-## Change Impact (B3 / B4)
+## Notes vs the planning draft
 
-### If B3 — competency method confirmed
-- Set `scorecard_templates.competency_method` value per category
-- Update score calculation service to branch by method
-- No schema change needed
-
-### If B3 — different method per category with deviation safeguard
-- `scorecard_competencies.manager_justification` already exists — just activate the logic
-- Add HR notification trigger in service layer
-
-### If B4 — Sokongan/Teknikal also fill KPI form
-- Add `category_scope` value to relevant `kpis` rows (column already exists)
-- Update scorecard creation service to generate `scorecard_kpis` for `sokongan_teknikal`
-- Update KPI form routing in UI
-- `kpi_weight` stays 0 in template — final score calculation unchanged
+- **Roles moved to Spatie** — the old `users.role` enum is gone.
+- **Enums anglicised** — categories `ceo/executive/support`, grades `excellent…needs_improvement` (were Malay).
+- **Snapshot + period-score model added** — `scorecard_kpis`/`scorecard_competencies` now carry snapshot columns; new `*_period_scores` tables hold per-period entries; new `review_periods`.
+- **Designations & strategic_objectives** added; `kpis` uses `title`/`weight`/`pengukuran` (no `title_my`/`category_scope`).
+- **`score_overrides`** gained `stage`/`field`, values widened to varchar; **`moderation_logs`** carries `updated_at`.
+- **Spatie Media Library** added for competency attachments.
