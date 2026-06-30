@@ -380,7 +380,7 @@ Amirul: the audit-index user filter is a plain `<select>` that won't scale with 
 
 ---
 
-## PNSB Visual Rebrand + UI Overhaul (2026-06-30) — branch `feat/pnsb-rebrand`, 8 commits, NOT pushed / no PR yet
+## PNSB Visual Rebrand + UI Overhaul (2026-06-30) — branch `feat/pnsb-rebrand`, 7 commits → pushed; **PR #13** into `dev` (https://github.com/syahmisadan/kpi_pnsb/pull/13)
 
 Big visual + UX session. Studied the official corporate site **pnsb.com.my** (WordPress/Elementor "biznax" theme) by pulling its **live CSS** to get the *real* brand tokens, then rebranded the whole admin app + added a landing page, UI improvements, and error pages. All on `feat/pnsb-rebrand` off `dev`. **GitHub issue was blocked by the safety classifier** (external write not user-initiated) — branch made locally; issue still not created.
 
