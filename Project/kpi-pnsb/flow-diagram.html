@@ -1,0 +1,787 @@
+<!DOCTYPE html><html><head><title></title><meta charset="utf-8"><style>* {
+	box-sizing: border-box;
+}
+
+html {
+	font-size: 100%;
+}
+
+body {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+		'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+	line-height: 1.6;
+	font-size: 0.6875em; /* 11 pt */
+	color: #111;
+	margin: 0;
+}
+
+body > :first-child {
+	padding-top: 0;
+	margin-top: 0;
+}
+
+body > :last-child {
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+	padding: 0.5em 0 0.25em;
+}
+
+h5,
+h6 {
+	padding: 0;
+}
+
+h5 {
+	font-size: 1em;
+}
+
+h6 {
+	font-size: 0.875em;
+	text-transform: uppercase;
+}
+
+p {
+	margin: 0.25em 0 1em;
+}
+
+blockquote {
+	margin: 0.5em 0 1em;
+	padding-left: 0.5em;
+	padding-right: 1em;
+	border-left: 4px solid gainsboro;
+	font-style: italic;
+}
+
+ul,
+ol {
+	margin: 0;
+	margin-left: 1em;
+	padding: 0 1.5em 0.5em;
+}
+
+pre {
+	white-space: pre-wrap;
+}
+
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code,
+p code,
+li code,
+pre code {
+	background-color: #f8f8f8;
+	padding: 0.1em 0.375em;
+	border: 1px solid #f8f8f8;
+	border-radius: 0.25em;
+	font-family: monospace;
+	font-size: 1.2em;
+}
+
+pre code {
+	display: block;
+	padding: 0.5em;
+}
+
+.page-break {
+	page-break-after: always;
+}
+
+img {
+	max-width: 100%;
+	margin: 1em 0;
+}
+
+table {
+	border-spacing: 0;
+	border-collapse: collapse;
+	display: block;
+	margin: 0 0 1em;
+	width: 100%;
+	overflow: auto;
+}
+
+table th,
+table td {
+	padding: 0.5em 1em;
+	border: 1px solid gainsboro;
+}
+
+table th {
+	font-weight: 600;
+}
+
+table tr {
+	background-color: white;
+	border-top: 1px solid gainsboro;
+}
+
+table tr:nth-child(2n) {
+	background-color: whitesmoke;
+}
+/*# sourceURL=C:\Users\amiru\AppData\Local\npm-cache\_npx\55158e48eb5c59f7\node_modules\md-to-pdf\markdown.css*/</style><style>pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub
+  Description: Light theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-light
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #24292e;
+  background: #ffffff
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #d73a49
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #6f42c1
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #005cc5
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #032f62
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #e36209
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #6a737d
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #22863a
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #24292e
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #005cc5;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #735c0f
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #24292e;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #24292e;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #22863a;
+  background-color: #f0fff4
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #b31d28;
+  background-color: #ffeef0
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}/*# sourceURL=C:\Users\amiru\AppData\Local\npm-cache\_npx\55158e48eb5c59f7\node_modules\highlight.js\styles\github.css*/</style></head>
+	<body class="">
+		<h1 id="🔄-pnsb-bsc-kpi--per-role-process-flow">🔄 PNSB BSC KPI — Per-Role Process Flow</h1>
+<blockquote>
+<p>One flowchart <strong>per role</strong>, each with pseudocode + a Mermaid diagram, so every actor can follow their own
+journey through an appraisal cycle.
+Rendered with Mermaid — open in any Mermaid-compatible viewer (VS Code, GitHub, Obsidian, etc.)</p>
+</blockquote>
+<hr>
+<h2 id="glossary-abbreviations-used">Glossary (Abbreviations Used)</h2>
+<table>
+<thead>
+<tr>
+<th>Abbreviation</th>
+<th>Full Form</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>PNSB</strong></td>
+<td>Permodalan Negeri Selangor Berhad</td>
+<td>The company</td>
+</tr>
+<tr>
+<td><strong>BSC</strong></td>
+<td>Balanced Scorecard / Kad Skor Imbangan</td>
+<td>Strategic performance framework with 4 perspectives</td>
+</tr>
+<tr>
+<td><strong>KPI</strong></td>
+<td>Key Performance Indicator / Petunjuk Prestasi Utama</td>
+<td>Measurable target assigned to each staff</td>
+</tr>
+<tr>
+<td><strong>ALP</strong></td>
+<td>Ahli Lembaga Pengarah</td>
+<td>Board of Directors — highest approval authority</td>
+</tr>
+<tr>
+<td><strong>KPE</strong></td>
+<td>Ketua Pegawai Eksekutif</td>
+<td>Chief Executive Officer (CEO)</td>
+</tr>
+<tr>
+<td><strong>HOD</strong></td>
+<td>Head of Department / Ketua Bahagian</td>
+<td>Division/department head</td>
+</tr>
+<tr>
+<td><strong>HR</strong></td>
+<td>Human Resources / Bahagian Sumber Manusia</td>
+<td>HR department that administers the appraisal process</td>
+</tr>
+<tr>
+<td><strong>KB</strong></td>
+<td>Kakitangan Biasa</td>
+<td>General/Regular Staff group (pre-moderation scores)</td>
+</tr>
+<tr>
+<td><strong>MOD1</strong></td>
+<td>Moderasi Pertama (oleh HR)</td>
+<td>First moderation round, conducted by HR — per department</td>
+</tr>
+<tr>
+<td><strong>MOD2</strong></td>
+<td>Moderasi Kedua (oleh KPE)</td>
+<td>Second moderation round, conducted by the CEO — org-wide</td>
+</tr>
+<tr>
+<td><strong>Point A</strong></td>
+<td>Verification</td>
+<td>Manager verifies/overrides KPI weight &amp; targets at approval time</td>
+</tr>
+<tr>
+<td><strong>Point B</strong></td>
+<td>Appraisal Scoring</td>
+<td>Manager enters final KPI achievement &amp; competency scores</td>
+</tr>
+<tr>
+<td><strong>KIV</strong></td>
+<td>Keep In View</td>
+<td>Pending — to be confirmed or scoped in a later phase</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="role-→-category-→-weighting-quick-map">Role → Category → Weighting Quick-Map</h2>
+<blockquote>
+<p>How each role maps to its system <code>category</code>, Spatie <code>role</code>, and scoring split. This is what drives which
+steps appear in each flowchart below.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Role (this doc)</th>
+<th>System<code>category</code></th>
+<th>Spatie<code>role</code></th>
+<th>KPI : Competency</th>
+<th>Special powers</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>CEO / KPE</strong></td>
+<td><code>ceo</code></td>
+<td><code>executive-director</code></td>
+<td><strong>100% : 0%</strong></td>
+<td>No manager → self-appraises; runs<strong>MOD2</strong> org-wide</td>
+</tr>
+<tr>
+<td><strong>HOD / Ketua Bahagian</strong></td>
+<td><code>executive</code></td>
+<td><code>division-head</code></td>
+<td><strong>80% : 20%</strong></td>
+<td>Is the<code>manager_id</code> of their staff → <strong>appraises subordinates</strong></td>
+</tr>
+<tr>
+<td><strong>Executive / Eksekutif</strong></td>
+<td><code>executive</code></td>
+<td><code>staff</code></td>
+<td><strong>80% : 20%</strong></td>
+<td>Standard full KPI + competency journey</td>
+</tr>
+<tr>
+<td><strong>Support / Sokongan</strong></td>
+<td><code>support</code></td>
+<td><code>staff</code></td>
+<td><strong>0% : 100%</strong></td>
+<td><strong>Skips entire KPI workflow</strong> — competency only</td>
+</tr>
+<tr>
+<td><strong>HR Admin</strong></td>
+<td>— (role-based)</td>
+<td><code>hr-admin</code></td>
+<td>—</td>
+<td>Opens/advances cycle, runs<strong>MOD1</strong>, <strong>locks</strong> grades</td>
+</tr>
+</tbody></table>
+<p><strong>Scorecard status flow:</strong> <code>draft → kpi_submitted → kpi_approved → appraisal → moderation → completed → locked</code>
+<em>(Support fast-tracks <code>draft → appraisal</code>, skipping <code>kpi_submitted</code> / <code>kpi_approved</code>.)</em></p>
+<p><strong>Cycle phase flow:</strong> <code>draft → active → appraisal → moderation → closed</code></p>
+<p><strong>Grade bands (auto from final_score):</strong> <code>≥90</code> Cemerlang · <code>76–89</code> Sangat Baik · <code>60–75</code> Baik · <code>50–59</code> Memuaskan · <code>&lt;50</code> Perlu Diperbaiki</p>
+<hr>
+<h2 id="1️⃣-ceo--kpe-ketua-pegawai-eksekutif">1️⃣ CEO / KPE (Ketua Pegawai Eksekutif)</h2>
+<blockquote>
+<p>100% KPI, no manager → <strong>self-appraises as board proxy</strong>. After everyone is graded, the KPE runs the
+<strong>org-wide MOD2</strong> moderation, then waits for HR to lock.</p>
+</blockquote>
+<p><strong>Pseudocode</strong></p>
+<pre><code>ON cycle.status == active:
+    setUpOwnScorecard()                      // KPI lines only (100% KPI)
+    balanceWeightsTo100()  PER perspective
+    submitForVerification()                  // status: draft -&gt; kpi_submitted
+    selfVerifyOwnKpis()                      // isSelfAppraiser == true; status -&gt; kpi_approved
+                                             //   (Point A: may override own weight/targets)
+
+ON results window open (kpi_approved):
+    FOR EACH review_period:
+        recordAchievement(0..100)
+    finalizeResults()                        // status -&gt; appraisal
+
+ON appraisal:
+    selfReviewOwnScorecard()                 // Point B: KPI score, cap 100; status -&gt; moderation
+
+ON cycle.status == moderation:
+    WAIT until HR completes MOD1 (all departments)
+    openMod2OrgWideSession()
+    FOR EACH graded scorecard org-wide:
+        IF distribution off target:
+            reBandGrade(before -&gt; after)     // score preserved, logged round = MOD2
+    // no self-moderation of own card
+
+ON HR locks grades:
+    receiveFinalGrade()                      // status -&gt; completed, then locked
+</code></pre>
+<p><strong>Flowchart</strong></p>
+<pre><code class="hljs mermaid">flowchart TD
+    C_START([🟢 KPE — Cycle Active]) --&gt; C1[Set up own scorecard\n100% KPI only]
+    C1 --&gt; C2[Balance weights to 100%\nper perspective]
+    C2 --&gt; C3[Submit for verification\ndraft → kpi_submitted]
+    C3 --&gt; C4{Self-verify own KPIs\nPoint A — self appraiser}
+    C4 --&gt;|✅ Approve| C5[kpi_approved]
+    C5 --&gt; C6[Record achievements\nper review period]
+    C6 --&gt; C7[Finalize results\nkpi_approved → appraisal]
+    C7 --&gt; C8[Self-review own scorecard\nPoint B — KPI score, cap 100\nappraisal → moderation]
+    C8 --&gt; C9[/⏳ Wait for HR MOD1\nall departments done/]
+    C9 --&gt; C10[Open MOD2 org-wide session]
+    C10 --&gt; C11{Distribution\nwithin bell-curve target?}
+    C11 --&gt;|✅ Within target| C12[Grades confirmed as-is]
+    C11 --&gt;|⚠️ Off target| C13[Re-band grade\nscore preserved · round MOD2]
+    C12 --&gt; C14[/⏳ Wait for HR to Lock/]
+    C13 --&gt; C14
+    C14 --&gt; C_END([🔴 Own grade locked → completed])
+
+    classDef decision fill:#7c4a00,color:#fff,stroke:#f0a500,stroke-width:2px
+    classDef reject fill:#5c1010,color:#fff,stroke:#e53935,stroke-width:2px
+    classDef approve fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
+    classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
+    class C4,C11 decision
+    class C13 reject
+    class C5,C12 approve
+    class C_START,C_END terminal
+</code></pre>
+<hr>
+<h2 id="2️⃣-hod--ketua-bahagian-division-head">2️⃣ HOD / Ketua Bahagian (Division Head)</h2>
+<blockquote>
+<p>Wears <strong>two hats</strong>: (a) their own 80/20 scorecard journey, and (b) as the <code>manager_id</code> of their staff, they
+<strong>verify and score subordinates</strong>. Manager override at appraisal is <strong>final</strong> — no rejection back to the employee.</p>
+</blockquote>
+<p><strong>Pseudocode</strong></p>
+<pre><code>// ---- HAT A: own scorecard (category executive, 80% KPI / 20% competency) ----
+ON cycle.status == active:
+    setUpOwnScorecard(); submitForVerification()   // draft -&gt; kpi_submitted
+    WAIT manager(=KPE) verifies                     // -&gt; kpi_approved
+    recordResults(); selfAssessCompetencies(1..5)   // attach evidence
+    WAIT manager(=KPE) scores appraisal             // -&gt; moderation -&gt; completed
+
+// ---- HAT B: as appraiser of own subordinates ----
+ON subordinate.scorecard.status == kpi_submitted:
+    openApproval(subordinate)
+    reviewKpis()
+    optionally overrideWeightAndTargets()           // Point A, stage = verification, logged
+    approveKpis()                                   // -&gt; kpi_approved  (no reject-back path used)
+
+ON subordinate.scorecard.status == appraisal:
+    enterKpiAchievement(0..100)                     // Point B, override logged if differs
+    enterCompetencyRatings(1..5)                    // self-rating shown as reference only
+    completeReview()                                // composite + grade auto-set; -&gt; moderation
+    // override is FINAL — no rejection back to employee
+</code></pre>
+<p><strong>Flowchart</strong></p>
+<pre><code class="hljs mermaid">flowchart TD
+    H_START([🟢 Ketua Bahagian]) --&gt; HAT{Acting as…}
+
+    %% Hat A — own scorecard
+    HAT --&gt;|Own scorecard\n80% KPI / 20% Competency| HA1[Set up own scorecard\n→ submit for verification]
+    HA1 --&gt; HA2[/⏳ KPE verifies my KPIs/]
+    HA2 --&gt; HA3[Record results +\nCompetency self-assessment\nPenilaian Keperibadian]
+    HA3 --&gt; HA4[/⏳ KPE scores my appraisal/]
+    HA4 --&gt; HA5[My grade → moderation → completed]
+
+    %% Hat B — appraiser of subordinates
+    HAT --&gt;|Appraise my staff| HB1{Subordinate card\nstatus?}
+    HB1 --&gt;|kpi_submitted| HB2[Review KPIs · Point A\noptionally override weight/targets]
+    HB2 --&gt; HB3[Approve KPIs\n→ kpi_approved]
+    HB1 --&gt;|appraisal| HB4[Enter KPI achievement 0–100 · Point B\nEnter competency ratings 1–5]
+    HB4 --&gt; HB5[Complete review\ncomposite + grade auto-set\n→ moderation]
+    HB5 --&gt; HB6[(Override is FINAL\nno reject back to staff)]
+    HB3 --&gt; H_END([🔴 Staff cards ready for moderation])
+    HB6 --&gt; H_END
+    HA5 --&gt; H_END
+
+    classDef decision fill:#7c4a00,color:#fff,stroke:#f0a500,stroke-width:2px
+    classDef reject fill:#5c1010,color:#fff,stroke:#e53935,stroke-width:2px
+    classDef approve fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
+    classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
+    class HAT,HB1 decision
+    class HB6 reject
+    class HB3,HA5 approve
+    class H_START,H_END terminal
+</code></pre>
+<hr>
+<h2 id="3️⃣-executive--eksekutif">3️⃣ Executive / Eksekutif</h2>
+<blockquote>
+<p>Standard staff member, <strong>80% KPI / 20% competency</strong>. Full journey: set KPIs → manager-approved → record
+results → competency self-assessment → manager scores → moderation → final grade.</p>
+</blockquote>
+<p><strong>Pseudocode</strong></p>
+<pre><code>ON cycle.status == active:
+    openScorecard()                          // KPI lines auto-generated from library
+    editKpis(); balanceWeightsTo100()        // per perspective
+    setThresholdMeetStretch() FOR each KPI
+    submitForVerification()                  // status: draft -&gt; kpi_submitted
+
+WAIT manager verifies (Point A)              // status -&gt; kpi_approved
+
+ON kpi_approved:
+    FOR EACH review_period: recordAchievement(0..100)
+    finalizeResults()                        // status -&gt; appraisal
+    selfAssessCompetencies(rate 1..5)        // 20% section; attach evidence files
+
+WAIT manager scores (Point B)                // composite + grade; status -&gt; moderation
+WAIT HR MOD1 + KPE MOD2                       // grade may be re-banded (score preserved)
+WAIT HR lock                                 // status -&gt; completed -&gt; locked
+receiveFinalGrade()
+</code></pre>
+<p><strong>Flowchart</strong></p>
+<pre><code class="hljs mermaid">flowchart TD
+    E_START([🟢 Eksekutif — Cycle Active]) --&gt; E1[Open scorecard\nKPI lines auto-generated]
+    E1 --&gt; E2[Edit KPIs · balance weights 100%\nset threshold/meet/stretch]
+    E2 --&gt; E3[Submit for verification\ndraft → kpi_submitted]
+    E3 --&gt; E4{Manager verifies\nPoint A}
+    E4 --&gt;|✅ Approved| E5[kpi_approved]
+    E5 --&gt; E6[Record achievements\nper review period → finalize → appraisal]
+    E6 --&gt; E7[Competency self-assessment 1–5\n20% · attach evidence]
+    E7 --&gt; E8{Manager scores\nPoint B — composite + grade}
+    E8 --&gt;|Score is FINAL| E9[status → moderation]
+    E9 --&gt; E10[/⏳ HR MOD1 → KPE MOD2\ngrade may re-band, score preserved/]
+    E10 --&gt; E11[/⏳ HR locks grades/]
+    E11 --&gt; E_END([🔴 Final grade received → locked])
+
+    classDef decision fill:#7c4a00,color:#fff,stroke:#f0a500,stroke-width:2px
+    classDef reject fill:#5c1010,color:#fff,stroke:#e53935,stroke-width:2px
+    classDef approve fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
+    classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
+    class E4,E8 decision
+    class E5 approve
+    class E_START,E_END terminal
+</code></pre>
+<hr>
+<h2 id="4️⃣-support--sokongan--teknikal">4️⃣ Support / Sokongan &amp; Teknikal</h2>
+<blockquote>
+<p><strong>0% KPI / 100% competency</strong> — <strong>fast-track</strong>. No KPI setup, no submit-for-verification, no results window.
+Goes straight to competency self-assessment, then manager scores, then moderation.</p>
+</blockquote>
+<p><strong>Pseudocode</strong></p>
+<pre><code>ON cycle.status == active:
+    openScorecard()                          // NO KPI lines (KPI weight = 0)
+    selfAssessCompetencies(rate 1..5)        // 100% competency
+    attachEvidenceFiles()
+    submitSelfAssessment()                   // status: draft -&gt; appraisal  (skips kpi_submitted/kpi_approved)
+
+WAIT manager scores (Point B)                // 100% competency composite + grade; status -&gt; moderation
+WAIT HR MOD1 + KPE MOD2                       // grade may be re-banded (score preserved)
+WAIT HR lock                                 // status -&gt; completed -&gt; locked
+receiveFinalGrade()
+</code></pre>
+<p><strong>Flowchart</strong></p>
+<pre><code class="hljs mermaid">flowchart TD
+    S_START([🟢 Sokongan — Cycle Active]) --&gt; S1[Open scorecard\nNO KPI section · 100% Competency]
+    S1 --&gt; S2[(⏭️ KPI steps skipped:\nno submit, no verify, no results)]
+    S2 --&gt; S3[Competency self-assessment 1–5\nPenilaian Keperibadian · attach evidence]
+    S3 --&gt; S4[Submit self-assessment\ndraft → appraisal]
+    S4 --&gt; S5{Manager scores\nPoint B — 100% competency}
+    S5 --&gt;|Score is FINAL| S6[status → moderation]
+    S6 --&gt; S7[/⏳ HR MOD1 → KPE MOD2\ngrade may re-band, score preserved/]
+    S7 --&gt; S8[/⏳ HR locks grades/]
+    S8 --&gt; S_END([🔴 Final grade received → locked])
+
+    classDef decision fill:#7c4a00,color:#fff,stroke:#f0a500,stroke-width:2px
+    classDef reject fill:#5c1010,color:#fff,stroke:#e53935,stroke-width:2px
+    classDef approve fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
+    classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
+    class S5 decision
+    class S2 reject
+    class S_START,S_END terminal
+</code></pre>
+<hr>
+<h2 id="5️⃣-hr-admin-bahagian-sumber-manusia">5️⃣ HR Admin (Bahagian Sumber Manusia)</h2>
+<blockquote>
+<p>Drives the whole cycle: opens it, generates scorecards, advances phases, runs <strong>MOD1 per department</strong>,
+waits for the KPE's <strong>MOD2</strong>, then <strong>locks</strong> grades to close the cycle.</p>
+</blockquote>
+<p><strong>Pseudocode</strong></p>
+<pre><code>createCycle()                                // cycle.status = draft
+generateScorecards()                         // one per appraisal-chain employee
+advancePhase(): draft -&gt; active              // KPI setting + execution window opens
+
+// ... employees &amp; managers work through their cards ...
+advancePhase(): active -&gt; appraisal          // freeze results; managers finish scoring
+advancePhase(): appraisal -&gt; moderation      // grades enter calibration
+
+FOR EACH department:
+    openMod1Session(department)
+    compareActualVsBellCurveTarget()
+    IF distribution off target:
+        reBandGrade(before -&gt; after)         // score preserved, logged round = MOD1
+
+WAIT KPE completes MOD2 (org-wide)
+
+IF cycle.status == moderation AND role in [super-admin, hr-admin]:
+    lockGrades()                             // all scorecards -&gt; completed (locked_at, locked_by)
+                                             // cycle.status -&gt; closed (closed_at)
+</code></pre>
+<p><strong>Flowchart</strong></p>
+<pre><code class="hljs mermaid">flowchart TD
+    R_START([🟢 HR — New Cycle]) --&gt; R1[Create cycle\nstatus = draft]
+    R1 --&gt; R2[Generate scorecards\none per appraisal-chain employee]
+    R2 --&gt; R3[Advance: draft → active\nKPI setting + execution opens]
+    R3 --&gt; R4[/⏳ Employees &amp; managers\nset KPIs, score, self-assess/]
+    R4 --&gt; R5[Advance: active → appraisal\nfreeze results]
+    R5 --&gt; R6[Advance: appraisal → moderation]
+    R6 --&gt; R7{For each department:\nMOD1 distribution OK?}
+    R7 --&gt;|✅ Within target| R8[Grades confirmed]
+    R7 --&gt;|⚠️ Off target| R9[Re-band grade\nscore preserved · round MOD1]
+    R8 --&gt; R10[/⏳ KPE runs MOD2 org-wide/]
+    R9 --&gt; R10
+    R10 --&gt; R11{Ready to lock?\nrole = hr-admin/super-admin}
+    R11 --&gt;|✅ Lock grades| R12[All cards → completed\nlocked_at, locked_by]
+    R12 --&gt; R13[Cycle → closed\nclosed_at]
+    R13 --&gt; R_END([🔴 Cycle Complete])
+
+    classDef decision fill:#7c4a00,color:#fff,stroke:#f0a500,stroke-width:2px
+    classDef reject fill:#5c1010,color:#fff,stroke:#e53935,stroke-width:2px
+    classDef approve fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
+    classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
+    class R7,R11 decision
+    class R9 reject
+    class R8,R12 approve
+    class R_START,R_END terminal
+</code></pre>
+<hr>
+<h2 id="bell-curve-target-reference-for-moderation--sesi-moderasi">Bell Curve Target Reference (for Moderation — Sesi Moderasi)</h2>
+<blockquote>
+<p>Based on 91 total Kakitangan Biasa (KB / Regular Staff). Percentages scale per headcount each cycle.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Kategori</th>
+<th>Sasaran (Target)</th>
+<th>% Target</th>
+<th>Trigger for Moderation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cemerlang (Excellent)</td>
+<td>3</td>
+<td>~3%</td>
+<td>If actual &gt; 3, downgrade excess to Sangat Baik</td>
+</tr>
+<tr>
+<td>Sangat Baik (Very Good)</td>
+<td>16</td>
+<td>~18%</td>
+<td>If actual &gt; 16, downgrade excess to Baik</td>
+</tr>
+<tr>
+<td>Baik (Good)</td>
+<td>61</td>
+<td>~67%</td>
+<td>Bulk of staff should land here</td>
+</tr>
+<tr>
+<td>Memuaskan (Satisfactory)</td>
+<td>7</td>
+<td>~8%</td>
+<td>If actual &lt; 7, upgrade some from Perlu Diperbaiki</td>
+</tr>
+<tr>
+<td>Perlu Diperbaiki (Needs Improvement)</td>
+<td>4</td>
+<td>~4%</td>
+<td>Minimum maintained for accountability</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="rejection--escalation-summary-quick-reference">Rejection &amp; Escalation Summary (Quick Reference)</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Who Verifies / Moderates</th>
+<th>What Happens</th>
+<th>Reject-back?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Individual KPI (Point A)</td>
+<td>Manager (HOD / KPE for self)</td>
+<td>Verify; may override weight &amp; targets, logged</td>
+<td>Approves forward — no formal reject path in-system</td>
+</tr>
+<tr>
+<td>Appraisal Score (Point B)</td>
+<td>Manager (HOD / KPE for self)</td>
+<td>Enters final KPI achievement + competency rating</td>
+<td><strong>No</strong> — manager override is FINAL</td>
+</tr>
+<tr>
+<td>MOD1 — per department</td>
+<td>HR Admin</td>
+<td>Re-band grades vs bell-curve; score preserved</td>
+<td>Adjusts grade only</td>
+</tr>
+<tr>
+<td>MOD2 — org-wide</td>
+<td>KPE (CEO)</td>
+<td>Final org-wide re-band; score preserved</td>
+<td>Adjusts grade only</td>
+</tr>
+<tr>
+<td>Lock</td>
+<td>HR Admin / Super Admin</td>
+<td>All cards → completed; cycle → closed</td>
+<td>Final — grades frozen</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="system-audit-trail-cross-cutting--not-a-per-role-appraisal-step">System Audit Trail (cross-cutting — not a per-role appraisal step)</h2>
+<blockquote>
+<p>Runs silently behind <strong>every</strong> flow above. Built with <code>owen-it/laravel-auditing</code>; viewable at <code>/audit-trail</code>
+by <strong>Super Admin only</strong> (separation of duties — the log can record HR's own actions).</p>
+</blockquote>
+<pre><code class="hljs mermaid">flowchart LR
+    subgraph SRC[What gets recorded]
+        M[Model change\ncreate / update / delete\non 16 domain &amp; config models]
+        A[Auth event\nlogin · logout · failed login]
+    end
+    M --&gt; AUD[(audits table\nwho · what · old→new · IP · URL)]
+    A --&gt; AUD
+    AUD --&gt; V[/audit-trail viewer\nSuper Admin only\nfilter + per-record timeline/]
+
+    classDef store fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
+    classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
+    class AUD store
+    class V terminal
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Model changes</strong></td>
+<td>create / update / delete on all 16 domain &amp; config models (KPIs, BSC, competencies, depts, designations, cycles, templates, users, scorecards…) — old vs new values, actor, IP, URL</td>
+</tr>
+<tr>
+<td><strong>Auth events</strong></td>
+<td><code>login</code> / <code>logout</code> attach to the user; <code>login_failed</code> is system-level with the attempted email + IP</td>
+</tr>
+<tr>
+<td><strong>Excluded</strong></td>
+<td>passwords/tokens never logged; the domain logs (<code>moderation_logs</code>, <code>score_overrides</code>, <code>scorecard_status_logs</code>) are not double-audited</td>
+</tr>
+<tr>
+<td><strong>Not recorded</strong></td>
+<td>console runs — seeders/tinker don't write audit rows (<code>audit.console</code> off)</td>
+</tr>
+<tr>
+<td><strong>Who can view</strong></td>
+<td>Super Admin only, at <code>/audit-trail</code></td>
+</tr>
+</tbody></table>
+
+	
+
+</body></html>
