@@ -208,6 +208,13 @@ Ahli Lembaga Pengarah - ALP (Board of Directors)
 - **Ketua Bahagian (Department Head) Dash**: Team KPI completion, distribution preview
 - **Bahagian Sumber Manusia (HR) / Admin Dash**: Company-wide bell curve, moderation controls, grade distribution
 
+### 🔒 Audit Trail & Activity Log  *(built 2026-06-30)*
+
+- General audit trail via **`owen-it/laravel-auditing`** — records create / update / delete on all 16 domain & config models (KPIs, BSC perspectives, competencies, departments, designations, cycles, templates, users, scorecards…), capturing old vs new values, the acting user, IP and URL.
+- **Authentication auditing** — login, logout, and **failed login** (attempted email + IP) recorded into the same log.
+- Secrets (password / remember_token) are never logged; the existing domain logs (`moderation_logs`, `score_overrides`, `scorecard_status_logs`) are left as-is (no double-auditing).
+- **Viewer** at `/audit-trail` — **Super Admin only** (separation of duties): filterable table (model / event / actor, with a searchable user combobox) + per-record change-history timeline.
+
 ### 🧮 Calculation Preview Tool (Inspired by AIROD PMS+)
 
 > HR and Super Admin can plug in scores and preview the computed result before saving — useful during moderation and appraisal sessions.
@@ -271,6 +278,7 @@ Final Score = (KPI Score × 0.80) + (Competency Score × 0.20)
 | `moderation_logs` | MOD1 / MOD2 grade changes audit |
 | `score_overrides` | Manager override audit trail |
 | `scorecard_status_logs` | Full scorecard status change history |
+| `audits` | General audit trail (owen-it) — create/update/delete on 16 models + login/logout/failed-login; Super Admin viewer |
 
 ---
 

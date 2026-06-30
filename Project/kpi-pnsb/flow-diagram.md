@@ -365,3 +365,34 @@ flowchart TD
 | MOD1 — per department    | HR Admin                     | Re-band grades vs bell-curve; score preserved    | Adjusts grade only                                  |
 | MOD2 — org-wide          | KPE (CEO)                    | Final org-wide re-band; score preserved          | Adjusts grade only                                  |
 | Lock                      | HR Admin / Super Admin       | All cards → completed; cycle → closed          | Final — grades frozen                              |
+
+---
+
+## System Audit Trail (cross-cutting — not a per-role appraisal step)
+
+> Runs silently behind **every** flow above. Built with `owen-it/laravel-auditing`; viewable at `/audit-trail`
+> by **Super Admin only** (separation of duties — the log can record HR's own actions).
+
+```mermaid
+flowchart LR
+    subgraph SRC[What gets recorded]
+        M[Model change\ncreate / update / delete\non 16 domain & config models]
+        A[Auth event\nlogin · logout · failed login]
+    end
+    M --> AUD[(audits table\nwho · what · old→new · IP · URL)]
+    A --> AUD
+    AUD --> V[/audit-trail viewer\nSuper Admin only\nfilter + per-record timeline/]
+
+    classDef store fill:#0d3d1f,color:#fff,stroke:#43a047,stroke-width:2px
+    classDef terminal fill:#2d2d2d,color:#fff,stroke:#888,stroke-width:2px
+    class AUD store
+    class V terminal
+```
+
+| What | Detail |
+| ---- | ------ |
+| **Model changes** | create / update / delete on all 16 domain & config models (KPIs, BSC, competencies, depts, designations, cycles, templates, users, scorecards…) — old vs new values, actor, IP, URL |
+| **Auth events** | `login` / `logout` attach to the user; `login_failed` is system-level with the attempted email + IP |
+| **Excluded** | passwords/tokens never logged; the domain logs (`moderation_logs`, `score_overrides`, `scorecard_status_logs`) are not double-audited |
+| **Not recorded** | console runs — seeders/tinker don't write audit rows (`audit.console` off) |
+| **Who can view** | Super Admin only, at `/audit-trail` |

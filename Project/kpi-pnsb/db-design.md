@@ -1,8 +1,8 @@
 # PNSB BSC KPI — Database Design
 
 > **Reflects the actually-built schema** (verified against the live MySQL `information_schema`).
-> Stack: Laravel 13 + Livewire 4 (Volt) + MySQL. Spatie Permission for roles; Spatie Media Library for attachments.
-> Last updated: 2026-06-29 (rewritten from the 2026-06-24 planning draft to match the implemented system)
+> Stack: Laravel 13 + Livewire 4 (Volt) + MySQL. Spatie Permission for roles; Spatie Media Library for attachments; owen-it/laravel-auditing for the audit trail.
+> Last updated: 2026-06-30 (added the `audits` table + audit-trail feature)
 
 ---
 
@@ -15,6 +15,7 @@
 - Status progression is one-way and logged on every change (`scorecard_status_logs`).
 - Enums for ALP-locked values; VARCHAR for anything HR might extend later.
 - `softDeletes` on the master/reference tables (users, departments, designations, kpis, scorecards, cycles, perspectives, templates, competency_items, review_periods, strategic_objectives, bell_curve_targets).
+- **General audit trail**: `owen-it/laravel-auditing` records create/update/delete on all domain & config models, plus authentication events (login/logout/failed-login), into the polymorphic `audits` table. The hand-rolled `moderation_logs` / `score_overrides` / `scorecard_status_logs` remain the **domain-specific** trails and are deliberately **not** double-audited.
 
 ---
 
@@ -304,6 +305,27 @@ timestamps
 ### 20. `media`  *(Spatie Media Library — competency evidence files)*
 Standard Spatie schema (`model_type`, `model_id`, `collection_name`, `file_name`, `mime_type`, `disk`, `size`, json props…). Collection `competency_attachments` is attached to `Scorecard`.
 
+### 21. `audits`  *(general audit trail — owen-it/laravel-auditing)*
+```
+id              bigint PK
+user_type       varchar NULL          -- actor morph (App\Models\User); NULL for system / failed-login
+user_id         bigint NULL
+event           varchar               -- created/updated/deleted/restored + login/logout/login_failed
+auditable_type  varchar NULL          -- audited model morph; NULL for model-less auth rows (failed login)
+auditable_id    bigint NULL
+old_values      json NULL             -- changed attributes before
+new_values      json NULL             -- changed attributes after  (secrets excluded: password, remember_token)
+url             varchar NULL          -- request URL, or 'console'
+ip_address      varchar(45) NULL
+user_agent      varchar(1023) NULL
+tags            varchar NULL          -- 'auth' for login/logout/login_failed
+timestamps
+INDEX (auditable_type, auditable_id)
+```
+**Audited models (16):** appraisal_cycles, bell_curve_targets, bsc_perspectives, competency_items, departments, designations, kpis, review_periods, scorecards, scorecard_competencies, scorecard_competency_period_scores, scorecard_kpis, scorecard_kpi_period_scores, scorecard_templates, strategic_objectives, users.
+**NOT audited** (already append-only logs — would be recursive): `moderation_logs`, `score_overrides`, `scorecard_status_logs`.
+**Auth events:** login/logout attach to the user (so they appear in that user's history); failed logins are **system-level** rows (null `auditable`) carrying the attempted email + IP. Auditing is **OFF in console** (seeders/tinker don't record — controlled by `audit.console`). Viewer at `/audit-trail` is **super-admin only** (separation of duties: the log can record HR's own actions).
+
 ### Framework / package tables
 `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions` (Spatie Permission); plus standard Laravel `migrations`, `sessions`, `cache`, `jobs`, `password_reset_tokens`.
 
@@ -337,6 +359,9 @@ competency_items >──< departments / designations (scoping pivots)
 
 scorecards ──< moderation_logs / score_overrides / scorecard_status_logs
 scorecards ──< media (competency_attachments)
+
+audits >── (polymorphic) auditable: any of the 16 audited models  (NULL for failed-login rows)
+audits >── (polymorphic) user: users                              (the actor; NULL = system)
 ```
 
 ---
@@ -376,3 +401,4 @@ scorecards ──< media (competency_attachments)
 - **Designations & strategic_objectives** added; `kpis` uses `title`/`weight`/`pengukuran` (no `title_my`/`category_scope`).
 - **`score_overrides`** gained `stage`/`field`, values widened to varchar; **`moderation_logs`** carries `updated_at`.
 - **Spatie Media Library** added for competency attachments.
+- **Audit trail added (2026-06-30)** — `owen-it/laravel-auditing` `audits` table; 16 domain/config models audited + login/logout/failed-login; super-admin `/audit-trail` viewer. The three hand-rolled logs (`moderation_logs`, `score_overrides`, `scorecard_status_logs`) stay as-is and are not double-audited.
