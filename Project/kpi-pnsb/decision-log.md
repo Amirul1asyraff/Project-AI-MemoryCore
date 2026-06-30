@@ -6,7 +6,7 @@ Project folder: `C:\laragon\www\Project-AI-MemoryCore\Project\kpi-pnsb\`
 Key files: `planning.md`, `flow-diagram.md`, `db-design.md`, `files/kpi1-excel-data.md` (Excel readable export), `files/` (Excel + PDF + bell curve image)
 
 **Company**: PNSB = Permodalan Negeri Selangor Berhad
-**System**: BSC KPI Performance Management System (Laravel + Vue.js + MySQL)
+**System**: BSC KPI Performance Management System (Laravel 13 + Livewire 4 + Tailwind + MySQL)
 **Reference system**: AIROD PMS+ (airod.pmsplus.my) — used as UI/flow reference only. PNSB diverges on scoring scale (% not 1–5), weight locking (ALP ketetapan), and a flexible review-period cycle (default half-yearly — see Appraisal Cycle Mechanics below; SUPERSEDES the old "annual-only" assumption).
 
 ## Calculation Settings Module (2026-06-29, branch `feat/calculation-settings`, issue #1)

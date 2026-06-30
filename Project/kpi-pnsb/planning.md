@@ -202,7 +202,7 @@ Ahli Lembaga Pengarah - ALP (Board of Directors)
 8. Sesi Moderasi (Moderation session) by Department Head + Ketua Pegawai Eksekutif (KPE) — bell curve applied
 9. Final grades assigned and communicated
 
-### 📊 Dashboards & Analytics (Vue + ApexCharts)
+### 📊 Dashboards & Analytics (Livewire + hand-rolled SVG charts)
 
 - **Staff Dash**: KPI progress per BSC (Balanced Scorecard) perspective, competency radar chart
 - **Ketua Bahagian (Department Head) Dash**: Team KPI completion, distribution preview
