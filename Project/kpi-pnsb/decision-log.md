@@ -9,6 +9,49 @@ Key files: `planning.md`, `flow-diagram.md`, `db-design.md`, `files/kpi1-excel-d
 **System**: BSC KPI Performance Management System (Laravel 13 + Livewire 4 + Tailwind + MySQL)
 **Reference system**: AIROD PMS+ (airod.pmsplus.my) — used as UI/flow reference only. PNSB diverges on scoring scale (% not 1–5), weight locking (ALP ketetapan), and a flexible review-period cycle (default half-yearly — see Appraisal Cycle Mechanics below; SUPERSEDES the old "annual-only" assumption).
 
+## Remediation SHIPPED — all 4 priorities merged into `dev` (2026-06-30)
+
+The 18-finding review (see next section) was fixed in **4 issue→branch→PR slices, all merged into `dev`**:
+
+| Priority | Findings | Issue | PR (merged) | Branch |
+|---|---|---|---|---|
+| **P0** privilege escalation | A1–A6 | #5 | **#6** | `fix/authz-tier-guard` |
+| **P1** wrong-grade integrity | F1, F2, F4, S3 | #7 | **#8** | `fix/appraisal-integrity` |
+| **P2** moderation integrity | M1, M3, M4, M5, M6 | #9 | **#10** | `fix/moderation-integrity` |
+| **P3** robustness & hygiene | F3, F5, EditPeriods txn, audit LIKE, S6 | #11 | **#12** | `fix/robustness` |
+
+**17 of 18 fixes shipped.** Test suite grew **258 → 280 green**; Pint clean throughout.
+
+**Key implementation notes (so we don't re-derive them):**
+- **P0** — role logic lives on the **`User` model** (constants + helpers `isSuperAdmin()`, `assignableRoles()`, `canManage()`, `isSystemRole()`), NOT an enum/new folder (Amirul's convention — I initially used an `app/Enums/Role.php` and he corrected it). `Gate::before` super-admin shortcut in `AppServiceProvider`. Roles/Permissions routes → super-admin only.
+- **P1** — extracted **`Scorecard::weightBlockers(?array $overrideWeights)`** (shared by employee submit + manager override, fixes F1). F2 blocks review when competency-based card has no competency lines. S3 gates `kpi_score` write behind `allPeriodsScored()`. F4 = warn at scorecard generation about appraiser-less (null-manager non-CEO) employees (dropped the more invasive "block head-less dept assignment" — broke 3 Org tests, forces head-first setup).
+- **P2** — **`ModerationLog::record()` reloads `lockForUpdate()` inside one transaction** (fixes M1 stale-grade race + M5 atomicity together; signature unchanged so all 9 callers untouched). New **`Scorecard::MODERATION_STATUSES`** const drives both pools (M6). `lockGrades` blocks on ungraded cards (M4) + re-reads cycle `lockForUpdate` (M3).
+- **P3** — audit search uses **`LIKE ? ESCAPE '='`** (portable MySQL+SQLite, verified). EditPeriods clamps `finalIndex` + wraps delete/recreate in a transaction.
+
+**DELIBERATELY NOT FIXED — S4** (`BscPerspective::rescaleKpiWeights` rounding drift): its docblock documents WHY exact-sum reconciliation is avoided (a perspective holds multi-level KPIs summing to a *multiple* of besar), and per-scorecard exactness is already handled by `Scorecards/Show::suggestedWeights` (last KPI absorbs remainder). Forcing the sum risks a real regression → **flagged for Amirul's product decision**, not fixed.
+
+**Refuted (verified false, untouched):** S1 (tier scoring is continuous % by design), S2 (per-period weighted_score quirk inert), S5 (kpiReviewerAdjusted undercount affects both sides equally).
+
+**Follow-ups parked:** (a) S4 product decision; (b) **flaky `DashboardTest::test_admin_dashboard_shows_department_and_category_widgets`** — non-deterministic (faker-sequence-sensitive data; passes in isolation, failed once in full suite then passed on re-run). Pre-existing, not remediation-caused; make its data explicit. Full plan in `docs/security/REMEDIATION-PLAN.md` (in the kpi_pnsb repo).
+
+## Security Code Review + Remediation Plan (2026-06-30, doc-only — no code changed)
+
+Ran a **high-effort multi-agent `/code-review`** over the whole `dev` app (`dev` = entire app vs near-empty `main`, ~7.4k lines of Livewire/Models). 7 parallel finders → dedup → 7 adversarial verifiers. **18 findings verified, 3 refuted.** Wrote the execution guide to **`docs/security/REMEDIATION-PLAN.md`** in the kpi project (first file under new `docs/security/`). **No app code touched** — planning only.
+
+**Locked decisions for the eventual fixes:**
+- **hr-admin** keeps managing regular users but is **blocked from the super-admin tier**; role + permission editing becomes **super-admin only**.
+- **`Scorecard.kpi_score`** is persisted **only when all review periods are scored** (mid-cycle stays null → UI shows "in progress").
+
+**The headline bug — P0 privilege escalation (A1–A6, all CONFIRMED):** routes admit `super-admin|hr-admin` but the Livewire **action methods have NO tier check**, and there's **no `Gate::before`/policy** (`AppServiceProvider::boot()` empty). An hr-admin can self-grant super-admin (`Users/Edit:95`), mint one (`Users/Create:59`), mass-assign permissions (`Roles/Edit:90`), delete core permissions (`Permissions/Index:78`), delete/deactivate a super-admin (`Users/Show:32`), or delete the super-admin role (`Roles/Index:93`). Fix = central `app/Enums/Role.php` + `Gate::before` super-admin shortcut + tighten Roles/Permissions routes to super-admin only + per-action `abort_unless`/role-assignment allowlist + a brand-new `AuthorizationTierTest` (these components currently have **zero** authz tests).
+
+**P1 wrong-grade integrity:** F1 override skips weight-sum recheck (`Appraisals/Show:166`); F2 competency-based card with no generated lines scores competency 0 (`:436`); F4 null-manager non-CEO has no appraiser → stalls cycle (`:136`); S3 partial `kpi_score` persisted/shown mid-cycle (`Results:320`). **P2 moderation:** M4 ungraded card orphaned when cycle closes + M6 pool missing `status='moderation'` filter (`Moderation/Index:47-50`); M5 `ModerationLog::record()` not atomic; M1/M3 concurrency races (PLAUSIBLE). **P3 hygiene:** F3 `Setup::save()` no status recheck; F5 `finalIndex` unvalidated; EditPeriods delete+recreate not transactional; audit search LIKE `%_` unescaped; S4 rescale rounding drift; S6 preview clamp `[0,5]` vs live `[1,5]`.
+
+**Reuse pointers found:** extract `Scorecard::weightBlockers()` from `Show::submitBlockers():503-536` (reused by F1); `DB::transaction` style at `Moderation/Index::lockGrades():108`; existing `allPeriodsScored()` for S3; `abort_if` precedent `Users/Show:32`; test helper `userWithRole()` at `CalculationSettingsTest:24-31`.
+
+**3 REFUTED (don't re-chase):** S1 — tier scoring is **continuous achievement % by design**, not 0/60/80/100 bands (threshold/meet/stretched are free-text reference). S2 — per-period `weighted_score` semantic quirk is inert (nothing sums those rows). S5 — `kpiReviewerAdjusted` undercount hits both sides equally, flag doesn't misfire.
+
+**Next when we proceed to fix (standing workflow):** 4 GitHub issues + 4 `fix/*` branches off `dev`, P0 first (`fix/authz-tier-guard`). Full plan + finding index in `docs/security/REMEDIATION-PLAN.md`. Suite is **258 green** today — must stay green.
+
 ## Calculation Settings Module (2026-06-29, branch `feat/calculation-settings`, issue #1)
 
 New admin page `/calculation-settings` (super-admin | hr-admin), inspired by AIROD PMS+ "Calculation Settings". Surfaces scoring config that previously lived only in seeders/constants. Files: `app/Livewire/Settings/Calculation.php` + `resources/views/livewire/settings/calculation.blade.php` + route in `routes/web.php` + sidebar link. Tests: `tests/Feature/CalculationSettingsTest.php` (10).

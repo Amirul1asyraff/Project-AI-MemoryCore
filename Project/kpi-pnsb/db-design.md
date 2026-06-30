@@ -23,13 +23,13 @@
 
 **Roles** are managed by **Spatie Permission** (`roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions`) — there is **no `role` column** on `users`. The 5 system roles:
 
-| Role | Purpose | Appraised? |
-|---|---|---|
-| `super-admin` | Full system admin; stands in for HR at moderation/lock | No |
-| `hr-admin` | HR operations, moderation MOD1, lock | No |
-| `executive-director` | CEO / KPE — top of chain, runs moderation MOD2 | Yes (CEO template) |
-| `division-head` | Ketua Bahagian — reviews subordinates **and** is reviewed | Yes (Executive template) |
-| `staff` | Executive or Support employees | Yes |
+| Role                   | Purpose                                                         | Appraised?               |
+| ---------------------- | --------------------------------------------------------------- | ------------------------ |
+| `super-admin`        | Full system admin; stands in for HR at moderation/lock          | No                       |
+| `hr-admin`           | HR operations, moderation MOD1, lock                            | No                       |
+| `executive-director` | CEO / KPE — top of chain, runs moderation MOD2                 | Yes (CEO template)       |
+| `division-head`      | Ketua Bahagian — reviews subordinates**and** is reviewed | Yes (Executive template) |
+| `staff`              | Executive or Support employees                                  | Yes                      |
 
 **`users.category`** (`ceo` / `executive` / `support`) is separate from role — it selects the scorecard template / scoring formula. A `division-head` is `category = executive`. Admin roles (`super-admin`, `hr-admin`) are excluded from scorecard generation regardless of category.
 
@@ -38,6 +38,7 @@
 ## Tables
 
 ### 1. `departments`
+
 ```
 id            bigint PK
 name          varchar(150)
@@ -49,6 +50,7 @@ deleted_at, timestamps
 ```
 
 ### 2. `designations`  *(new since planning — replaces free-text job_title)*
+
 ```
 id            bigint PK
 name          varchar(150)
@@ -60,6 +62,7 @@ deleted_at, timestamps
 ```
 
 ### 3. `users`
+
 ```
 id              bigint PK
 name            varchar(255)
@@ -75,9 +78,11 @@ password        varchar(255)
 remember_token  varchar(100) NULL
 deleted_at, timestamps
 ```
+
 > Permissions come from Spatie role assignments, **not** a column here.
 
 ### 4. `appraisal_cycles`
+
 ```
 id         bigint PK
 year       year UNIQUE
@@ -89,6 +94,7 @@ deleted_at, timestamps
 ```
 
 ### 5. `review_periods`  *(new — half-yearly scoring windows under a cycle)*
+
 ```
 id         bigint PK
 cycle_id   bigint → appraisal_cycles.id
@@ -103,6 +109,7 @@ deleted_at, timestamps
 ```
 
 ### 6. `bsc_perspectives`
+
 ```
 id          bigint PK
 name        varchar(100)          -- Financial / Customer / Internal Business Process / Learning & Growth
@@ -111,9 +118,11 @@ weight      decimal(5,2)          -- 40 / 30 / 20 / 10
 sort_order  tinyint
 deleted_at, timestamps
 ```
+
 **Seed (ALP-locked):** Financial 40 · Customer 30 · Internal Business Process 20 · Learning & Growth 10.
 
 ### 7. `strategic_objectives`  *(new — objectives under each perspective)*
+
 ```
 id                 bigint PK
 bsc_perspective_id bigint → bsc_perspectives.id
@@ -125,6 +134,7 @@ deleted_at, timestamps
 ```
 
 ### 8. `kpis`
+
 ```
 id                     bigint PK
 title                  varchar(255)
@@ -138,12 +148,15 @@ is_active              boolean
 created_by             bigint → users.id
 deleted_at, timestamps
 ```
+
 **Cascade scoping pivots:**
+
 - `kpi_department` (kpi_id, department_id) — for `level = department`
 - `kpi_designation` (kpi_id, designation_id) — for `level = individual`
 - `level = company` cascades to every KPI-based employee (no pivot rows).
 
 ### 9. `scorecard_templates`
+
 ```
 id                 bigint PK
 category           enum('ceo','executive','support') UNIQUE
@@ -152,9 +165,11 @@ competency_weight  decimal(5,2)
 competency_method  varchar(50) NULL   -- currently 'average'
 deleted_at, timestamps
 ```
+
 **Seed (ALP-locked):** ceo 100/0 · executive 80/20 · support 0/100.
 
 ### 10. `competency_items`
+
 ```
 id                 bigint PK
 title              varchar(255)
@@ -164,9 +179,11 @@ level_descriptions json NULL          -- Likert level text (1..n descriptions)
 is_active          boolean
 deleted_at, timestamps
 ```
+
 **Scoping pivots:** `competency_item_department`, `competency_item_designation` (functional competencies scoped to dept/designation; core apply to all).
 
 ### 11. `scorecards`
+
 ```
 id                      bigint PK
 user_id                 bigint → users.id
@@ -183,11 +200,13 @@ locked_by               bigint NULL → users.id
 deleted_at, timestamps
 UNIQUE (user_id, cycle_id)
 ```
+
 **Competency attachments:** stored via Spatie Media Library (`media` table, collection `competency_attachments`).
 
 **Grade auto-assignment (C5, on `final_score`):** ≥90 excellent · ≥76 very_good · ≥60 good · ≥50 satisfactory · <50 needs_improvement.
 
 ### 12. `scorecard_kpis`  *(snapshot of an assigned KPI)*
+
 ```
 id                 bigint PK
 scorecard_id       bigint → scorecards.id
@@ -207,9 +226,11 @@ weighted_score     decimal(5,2) NULL            -- tier_score/100 × kpi_weight
 notes              text NULL
 timestamps
 ```
+
 **Tier scoring (C7):** Below Threshold 0 · Threshold 60 · Meet Target 80 · Stretched 100.
 
 ### 13. `scorecard_kpi_period_scores`  *(new — per review-period KPI actuals)*
+
 ```
 id                bigint PK
 scorecard_kpi_id  bigint → scorecard_kpis.id
@@ -222,6 +243,7 @@ timestamps
 ```
 
 ### 14. `scorecard_competencies`  *(snapshot of an assessed competency)*
+
 ```
 id                    bigint PK
 scorecard_id          bigint → scorecards.id
@@ -236,6 +258,7 @@ timestamps
 ```
 
 ### 15. `scorecard_competency_period_scores`  *(new — per review-period competency ratings)*
+
 ```
 id                       bigint PK
 scorecard_competency_id  bigint → scorecard_competencies.id
@@ -248,6 +271,7 @@ timestamps
 ```
 
 ### 16. `bell_curve_targets`
+
 ```
 id           bigint PK
 cycle_id     bigint → appraisal_cycles.id
@@ -257,9 +281,11 @@ target_pct   decimal(5,2)
 timestamps, deleted_at
 UNIQUE (cycle_id, grade)
 ```
+
 Targets scale to headcount (largest-remainder). Reference distribution (per ~91 staff): excellent 3.3% · very_good 17.58% · good 67.03% · satisfactory 7.69% · needs_improvement 4.4%.
 
 ### 17. `moderation_logs`
+
 ```
 id           bigint PK
 scorecard_id bigint → scorecards.id
@@ -272,9 +298,11 @@ notes        text NULL
 moderated_at timestamp
 timestamps
 ```
+
 > A moderation "adjust" moves the grade band; the raw score is preserved, every move logged here.
 
 ### 18. `score_overrides`  *(audit of manager/verification overrides)*
+
 ```
 id            bigint PK
 scorecard_id  bigint → scorecards.id
@@ -291,6 +319,7 @@ timestamps
 ```
 
 ### 19. `scorecard_status_logs`  *(full status-change audit; feeds dashboard "Recent Activity")*
+
 ```
 id           bigint PK
 scorecard_id bigint → scorecards.id
@@ -303,9 +332,11 @@ timestamps
 ```
 
 ### 20. `media`  *(Spatie Media Library — competency evidence files)*
+
 Standard Spatie schema (`model_type`, `model_id`, `collection_name`, `file_name`, `mime_type`, `disk`, `size`, json props…). Collection `competency_attachments` is attached to `Scorecard`.
 
 ### 21. `audits`  *(general audit trail — owen-it/laravel-auditing)*
+
 ```
 id              bigint PK
 user_type       varchar NULL          -- actor morph (App\Models\User); NULL for system / failed-login
@@ -322,11 +353,13 @@ tags            varchar NULL          -- 'auth' for login/logout/login_failed
 timestamps
 INDEX (auditable_type, auditable_id)
 ```
+
 **Audited models (16):** appraisal_cycles, bell_curve_targets, bsc_perspectives, competency_items, departments, designations, kpis, review_periods, scorecards, scorecard_competencies, scorecard_competency_period_scores, scorecard_kpis, scorecard_kpi_period_scores, scorecard_templates, strategic_objectives, users.
 **NOT audited** (already append-only logs — would be recursive): `moderation_logs`, `score_overrides`, `scorecard_status_logs`.
 **Auth events:** login/logout attach to the user (so they appear in that user's history); failed logins are **system-level** rows (null `auditable`) carrying the attempted email + IP. Auditing is **OFF in console** (seeders/tinker don't record — controlled by `audit.console`). Viewer at `/audit-trail` is **super-admin only** (separation of duties: the log can record HR's own actions).
 
 ### Framework / package tables
+
 `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions` (Spatie Permission); plus standard Laravel `migrations`, `sessions`, `cache`, `jobs`, `password_reset_tokens`.
 
 ---
@@ -364,6 +397,226 @@ audits >── (polymorphic) auditable: any of the 16 audited models  (NULL for 
 audits >── (polymorphic) user: users                              (the actor; NULL = system)
 ```
 
+### Entity-Relationship Diagrams
+
+> Split into three focused views so each renders large and readable (one 22-table graph shrinks to nothing on a page). Pivots are drawn as many-to-many links; entities shown as `id`-only boxes are *anchors* whose full definition lives in another view.
+
+#### ERD 1 — People, Org & Cycles
+
+```mermaid
+erDiagram
+    departments ||--o{ designations : "has"
+    departments ||--o{ users : "employs"
+    designations ||--o{ users : "classifies"
+    users ||--o{ users : "manages (manager_id)"
+    appraisal_cycles ||--o{ review_periods : "has"
+    appraisal_cycles ||--o{ bell_curve_targets : "sets"
+
+    departments {
+        bigint id PK
+        varchar name
+        varchar code UK
+        bigint parent_id FK
+        bigint head_user_id FK
+        boolean is_active
+    }
+    designations {
+        bigint id PK
+        varchar name
+        varchar short_name
+        bigint department_id FK
+    }
+    users {
+        bigint id PK
+        varchar name
+        varchar employee_no UK
+        varchar email UK
+        bigint department_id FK
+        bigint designation_id FK
+        bigint manager_id FK
+        enum category
+    }
+    appraisal_cycles {
+        bigint id PK
+        year year UK
+        enum status
+        bigint opened_by FK
+    }
+    review_periods {
+        bigint id PK
+        bigint cycle_id FK
+        tinyint sequence
+        varchar label
+        decimal weight
+        boolean is_final
+    }
+    bell_curve_targets {
+        bigint id PK
+        bigint cycle_id FK
+        enum grade
+        int target_count
+        decimal target_pct
+    }
+```
+
+#### ERD 2 — KPI & Competency Library
+
+```mermaid
+erDiagram
+    bsc_perspectives ||--o{ strategic_objectives : "groups"
+    bsc_perspectives ||--o{ kpis : "categorizes"
+    strategic_objectives ||--o{ kpis : "targets"
+    kpis }o--o{ departments : "kpi_department"
+    kpis }o--o{ designations : "kpi_designation"
+    competency_items }o--o{ departments : "competency_item_department"
+    competency_items }o--o{ designations : "competency_item_designation"
+
+    bsc_perspectives {
+        bigint id PK
+        varchar name
+        decimal weight
+        tinyint sort_order
+    }
+    strategic_objectives {
+        bigint id PK
+        bigint bsc_perspective_id FK
+        varchar name
+    }
+    kpis {
+        bigint id PK
+        varchar title
+        bigint bsc_perspective_id FK
+        bigint strategic_objective_id FK
+        decimal weight
+        enum level
+    }
+    competency_items {
+        bigint id PK
+        varchar title
+        enum type
+        json level_descriptions
+    }
+    scorecard_templates {
+        bigint id PK
+        enum category UK
+        decimal kpi_weight
+        decimal competency_weight
+    }
+    departments {
+        bigint id PK
+    }
+    designations {
+        bigint id PK
+    }
+```
+
+#### ERD 3 — Scorecards & Scoring
+
+```mermaid
+erDiagram
+    users ||--o{ scorecards : "owns"
+    appraisal_cycles ||--o{ scorecards : "contains"
+    scorecard_templates ||--o{ scorecards : "shapes"
+    scorecards ||--o{ scorecard_kpis : "has"
+    scorecards ||--o{ scorecard_competencies : "has"
+    kpis ||--o{ scorecard_kpis : "snapshot-of"
+    competency_items ||--o{ scorecard_competencies : "snapshot-of"
+    scorecard_kpis ||--o{ scorecard_kpi_period_scores : "scored-per-period"
+    scorecard_competencies ||--o{ scorecard_competency_period_scores : "scored-per-period"
+    review_periods ||--o{ scorecard_kpi_period_scores : "window"
+    review_periods ||--o{ scorecard_competency_period_scores : "window"
+    scorecards ||--o{ moderation_logs : "moderated"
+    scorecards ||--o{ score_overrides : "overridden"
+    scorecards ||--o{ scorecard_status_logs : "status-log"
+    scorecards ||--o{ media : "attachments"
+    users ||--o{ audits : "actor (polymorphic)"
+
+    scorecards {
+        bigint id PK
+        bigint user_id FK
+        bigint cycle_id FK
+        bigint template_id FK
+        enum status
+        decimal final_score
+        enum grade
+    }
+    scorecard_kpis {
+        bigint id PK
+        bigint scorecard_id FK
+        bigint kpi_id FK
+        bigint bsc_perspective_id FK
+        decimal kpi_weight
+        decimal weighted_score
+    }
+    scorecard_kpi_period_scores {
+        bigint id PK
+        bigint scorecard_kpi_id FK
+        bigint review_period_id FK
+        decimal weighted_score
+    }
+    scorecard_competencies {
+        bigint id PK
+        bigint scorecard_id FK
+        bigint competency_item_id FK
+        decimal final_rating
+    }
+    scorecard_competency_period_scores {
+        bigint id PK
+        bigint scorecard_competency_id FK
+        bigint review_period_id FK
+        decimal final_rating
+    }
+    moderation_logs {
+        bigint id PK
+        bigint scorecard_id FK
+        enum round
+        bigint moderated_by FK
+    }
+    score_overrides {
+        bigint id PK
+        bigint scorecard_id FK
+        enum override_type
+        bigint overridden_by FK
+    }
+    scorecard_status_logs {
+        bigint id PK
+        bigint scorecard_id FK
+        varchar to_status
+        bigint changed_by FK
+    }
+    media {
+        bigint id PK
+        varchar model_type
+        bigint model_id
+        varchar collection_name
+    }
+    audits {
+        bigint id PK
+        bigint user_id FK
+        varchar event
+        varchar auditable_type
+        bigint auditable_id
+    }
+    users {
+        bigint id PK
+    }
+    appraisal_cycles {
+        bigint id PK
+    }
+    scorecard_templates {
+        bigint id PK
+    }
+    kpis {
+        bigint id PK
+    }
+    competency_items {
+        bigint id PK
+    }
+    review_periods {
+        bigint id PK
+    }
+```
+
 ---
 
 ## Score Flow (how a number becomes a grade)
@@ -378,18 +631,18 @@ audits >── (polymorphic) user: users                              (the actor
 
 ## Business Rules (application layer)
 
-| Rule | Where |
-|---|---|
-| `support` → no `scorecard_kpis` (0% KPI weight) | Scorecard generation |
-| `ceo` → no `scorecard_competencies` (0% competency weight) | Scorecard generation |
-| Admin roles (`super-admin`, `hr-admin`) excluded from scorecard generation | `eligibleEmployees()` |
-| `manager_rating` becomes `final_rating` (C1) | Competency scoring |
-| `tier_score` only ever 0 / 60 / 80 / 100 (C7) | KPI scoring |
-| `final_score` on 0–100 scale (not /5) | Score calc |
-| Grade from `final_score` thresholds (C5) | Grade assignment |
-| BSC weights sum to 100; KPI weights per perspective sum to that perspective's weight | Validation |
-| Moderation MOD1 = `hr-admin`/`super-admin`; MOD2 = `executive-director`/`super-admin` | Moderation gates |
-| Scorecard status is one-way | Status transition guard |
+| Rule                                                                                         | Where                   |
+| -------------------------------------------------------------------------------------------- | ----------------------- |
+| `support` → no `scorecard_kpis` (0% KPI weight)                                         | Scorecard generation    |
+| `ceo` → no `scorecard_competencies` (0% competency weight)                              | Scorecard generation    |
+| Admin roles (`super-admin`, `hr-admin`) excluded from scorecard generation               | `eligibleEmployees()` |
+| `manager_rating` becomes `final_rating` (C1)                                             | Competency scoring      |
+| `tier_score` only ever 0 / 60 / 80 / 100 (C7)                                              | KPI scoring             |
+| `final_score` on 0–100 scale (not /5)                                                     | Score calc              |
+| Grade from`final_score` thresholds (C5)                                                    | Grade assignment        |
+| BSC weights sum to 100; KPI weights per perspective sum to that perspective's weight         | Validation              |
+| Moderation MOD1 =`hr-admin`/`super-admin`; MOD2 = `executive-director`/`super-admin` | Moderation gates        |
+| Scorecard status is one-way                                                                  | Status transition guard |
 
 ---
 
@@ -402,3 +655,4 @@ audits >── (polymorphic) user: users                              (the actor
 - **`score_overrides`** gained `stage`/`field`, values widened to varchar; **`moderation_logs`** carries `updated_at`.
 - **Spatie Media Library** added for competency attachments.
 - **Audit trail added (2026-06-30)** — `owen-it/laravel-auditing` `audits` table; 16 domain/config models audited + login/logout/failed-login; super-admin `/audit-trail` viewer. The three hand-rolled logs (`moderation_logs`, `score_overrides`, `scorecard_status_logs`) stay as-is and are not double-audited.
+
