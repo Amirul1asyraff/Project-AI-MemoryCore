@@ -9,6 +9,37 @@ Key files: `planning.md`, `flow-diagram.md`, `db-design.md`, `files/kpi1-excel-d
 **System**: BSC KPI Performance Management System (Laravel 13 + Livewire 4 + Tailwind + MySQL)
 **Reference system**: AIROD PMS+ (airod.pmsplus.my) — used as UI/flow reference only. PNSB diverges on scoring scale (% not 1–5), weight locking (ALP ketetapan), and a flexible review-period cycle (default half-yearly — see Appraisal Cycle Mechanics below; SUPERSEDES the old "annual-only" assumption).
 
+## Performance History + Excel Export + Dashboard Cycle Selector — MERGED into `dev` (2026-07-01)
+
+Post-rebrand gap analysis (what the system lacks aside from the parked notifications). Amirul picked **historical comparison** and **real exports**; notifications stay **parked pending his superior's flow validation**. Three features (+ a flake fix), all **merged into `dev`**:
+
+| Feature | PR (merged) | Branch |
+|---|---|---|
+| **Performance History** | **#14** | `feat/performance-history` |
+| **Excel Export (Reports)** | **#15** (stacked on #14, auto-retargeted to `dev`) | `feat/report-excel-export` |
+| **Dashboard Cycle Selector + flake fix** | **#16** | `feat/dashboard-cycle-filter` |
+
+**Slice 1 — Performance History (per-employee trend across cycles):**
+- **`User::performanceHistory()`** returns finalised (`completed`/`locked`) scorecards oldest-first, each row: year, cycle, final_score, grade, grade_label, **delta vs previous cycle** (null for earliest). In-progress cycles excluded so the trend isn't skewed.
+- **`<x-performance-history :user="…">`** anonymous component — grade-coloured trend bars (height ∝ final_score, `Scorecard::GRADE_BAR_COLORS`) + newest-first detail table `Cycle | Final Score | Grade | Δ`. **Category-agnostic** — dropped the KPI column because `final_score` is the only metric comparable across CEO (KPI-only), executive (80/20), support (competency-only). *(First cut had a hard-coded KPI column — Amirul caught that support has no KPI; fixed.)*
+- Wired into **both** surfaces: employee dashboard (staff + division-head branches only) and admin **User Details** page. **Watch-out / open decision:** `executive-director` is an `isAdminViewer()` on the dashboard → the **CEO/exec-director does NOT see their own history panel on their dashboard** (only via User Details). Amirul flagged this; adding an exec-director dashboard panel is a PARKED polish item.
+- **`PerformanceHistoryDemoSeeder`** — **full-flow replay** (Amirul chose this over aggregate-only). Builds 3 past **locked** cycles (2022–2024) with real KPI lines (ported `generateKpiLines`+`suggestedWeights`, weights **normalised to 100%**), Mid-Year/Year-End period scores, competency lines with ratings; kpi/competency/final scores + grade all **derived** (not hand-set). Opening a past card shows a populated breakdown. Verified: weights=100, `kpi_score=Σ weighted_score`, `final=kpi×w+comp×w`. Run: `php artisan db:seed --class=PerformanceHistoryDemoSeeder` (after `migrate:fresh --seed` + optionally `ModerationDemoSeeder` for the current 2025 moderation cycle).
+- Tests: new `PerformanceHistoryTest` (ordering, completed/locked-only filter, empty state). **Gotcha learned:** `ScorecardTemplateFactory` category is `fake()->unique()` over **3 values** — creating >3 cards via `Scorecard::factory()` without an explicit `template_id` exhausts the pool ("Maximum retries 10000"). Reuse ONE template.
+
+**Slice 2 — Excel export (Reports page):**
+- Added **`maatwebsite/excel ^3.1`** (Amirul pre-approved the dependency; works on Laravel 13/PHP 8.4).
+- **`Reports\Index::exportExcel()`** → `Excel::download(PerformanceReportExport, 'performance-report-<year>.xlsx')`. Logic in **`app/Exports/`** (`PerformanceReportExport` implements `WithMultipleSheets` → `FinalGradesSheet` + `SummarySheet`), decoupled from Livewire.
+- **2 sheets:** *Final Grades* (per-employee, navy `#1D344E` header, `ShouldAutoSize`, numeric scores) + *Summary* (grade distribution + department breakdown). Mirrors on-screen semantics — **filtered** grade list, **cycle-wide** summary (the page's `allScorecards` drives chart/breakdowns, `scorecards` drives only the filtered final-grade table).
+- `Export Excel` button next to CSV/Print. Test via `Excel::fake()` + `Excel::assertDownloaded`; verified a **real** xlsx writes (valid PK zip, 2 sheets, 22 rows). All 15 `ReportsTest` green.
+
+**Both need `npm run build`** (new component + new button). Both branches deleted post-merge; on `dev`, clean.
+
+**Feature 3 — Dashboard cycle selector (PR #16):**
+- Dashboard was hard-locked to the latest cycle. Added `public ?int $cycleId` + `mount()` (defaults to `AppraisalCycle::latest('year')`) + a `cycles()` computed; `cycle()` now returns the selected cycle. **Cycle `<select>` in the header** (`wire:model.live`). All current-cycle widgets (org stats, division-head team view, My Scorecard) follow the selection; pending-action nudges + submission-window self-correct for closed cycles. Performance History panel stays all-cycles (independent). New `test_cycle_filter_switches_the_dashboard_to_the_selected_cycle`. **Needs `npm run build`.**
+- **FIXED the parked DashboardTest flake** (`test_admin_dashboard_shows_department_and_category_widgets`, ~1 in 8). Root cause (found by instrumentation): `Kpi::factory()` left `strategic_objective_id` at its default → `StrategicObjective::factory()` spawned its own **random-named `BscPerspective`** (`fake()->randomElement(['Financial',…])`) → ~1 in 4 a duplicate empty "Financial" that `kpiByCategory()->firstWhere('name','Financial')` could pick → count 0. Fix = pin the test KPI's objective to the same Financial perspective. **0 failures in 20 full-file runs** after. *(General lesson: factory defaults that cascade `BscPerspective::factory()`/`ScorecardTemplateFactory` with random/unique values are a flake/exhaustion source — pin the FK in tests.)*
+
+**PARKED after this session:** exec-director/CEO dashboard history panel · grade-badge tint (Very Good `emerald-50` reads faint) · seeder status-log timeline · **Slice 3 onboarding/help** · **notifications** (awaiting superior's flow sign-off).
+
 ## Remediation SHIPPED — all 4 priorities merged into `dev` (2026-06-30)
 
 The 18-finding review (see next section) was fixed in **4 issue→branch→PR slices, all merged into `dev`**:
@@ -32,7 +63,7 @@ The 18-finding review (see next section) was fixed in **4 issue→branch→PR sl
 
 **Refuted (verified false, untouched):** S1 (tier scoring is continuous % by design), S2 (per-period weighted_score quirk inert), S5 (kpiReviewerAdjusted undercount affects both sides equally).
 
-**Follow-ups parked:** (a) S4 product decision; (b) **flaky `DashboardTest::test_admin_dashboard_shows_department_and_category_widgets`** — non-deterministic (faker-sequence-sensitive data; passes in isolation, failed once in full suite then passed on re-run). Pre-existing, not remediation-caused; make its data explicit. Full plan in `docs/security/REMEDIATION-PLAN.md` (in the kpi_pnsb repo).
+**Follow-ups parked:** (a) S4 product decision; (b) ~~flaky `DashboardTest::test_admin_dashboard_shows_department_and_category_widgets`~~ **FIXED 2026-07-01** (PR #16) — was a `Kpi::factory()` → `StrategicObjective::factory()` → random-named `BscPerspective` cascade creating a duplicate empty "Financial"; pinned the FK. See the 2026-07-01 section. Full plan in `docs/security/REMEDIATION-PLAN.md` (in the kpi_pnsb repo).
 
 ## Security Code Review + Remediation Plan (2026-06-30, doc-only — no code changed)
 
