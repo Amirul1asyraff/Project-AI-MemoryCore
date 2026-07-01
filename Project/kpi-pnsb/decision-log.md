@@ -3,11 +3,33 @@
 *Current decision state, blockers, and architecture choices for the PNSB BSC KPI Performance Management System. Companion to `planning.md`, `flow-diagram.md`, `db-design.md`, `weight-calculation.md`, `watchouts.md`.*
 
 Project folder: `C:\laragon\www\Project-AI-MemoryCore\Project\kpi-pnsb\`
-Key files: `planning.md`, `flow-diagram.md`, `db-design.md`, `files/kpi1-excel-data.md` (Excel readable export), `files/` (Excel + PDF + bell curve image)
+Key files: `planning.md`, `flow-diagram.md`, `db-design.md`, `audit-2026-07-01.md` (whole-system audit + remediation status), `files/kpi1-excel-data.md` (Excel readable export), `files/` (Excel + PDF + bell curve image)
 
 **Company**: PNSB = Permodalan Negeri Selangor Berhad
 **System**: BSC KPI Performance Management System (Laravel 13 + Livewire 4 + Tailwind + MySQL)
 **Reference system**: AIROD PMS+ (airod.pmsplus.my) — used as UI/flow reference only. PNSB diverges on scoring scale (% not 1–5), weight locking (ALP ketetapan), and a flexible review-period cycle (default half-yearly — see Appraisal Cycle Mechanics below; SUPERSEDES the old "annual-only" assumption).
+
+## Whole-System Audit + Critical/High Remediation — MERGED into `dev` (2026-07-01)
+
+Ran a fresh **3-agent read-only audit** (security/authz · flow integrity · DB design) over `dev`. Full findings (Critical→Low, with status) in **`Project/kpi-pnsb/audit-2026-07-01.md`**. Prior P0–P3 fixes re-verified intact. Amirul chose to fix **Critical + all 5 High**; two needed product decisions. Shipped as **3 PR slices, all merged**:
+
+| PR | Slice | Findings |
+|---|---|---|
+| **#17** | `fix/security-hardening` | H1 (user-tier guard) · H2 (private evidence) |
+| **#18** | `fix/db-integrity` | C1 (regen crash) · H5 (users FKs) |
+| **#19** | `fix/moderation-appraiser` | H3 (Seal-MOD1) · H4 (appraiser chain) |
+
+**Key implementation facts (so we don't re-derive):**
+- **C1** — `Cycles/Show::generateScorecards` now `Scorecard::withTrashed()->firstOrNew(...)` + `restore()`. The Postgres "`deleted_at` in the unique key" trick **does not work on MySQL** (NULLs are distinct → wouldn't block two live cards; and MySQL won't drop an index a FK needs). App-level restore is the correct fix; the original `unique(user_id, cycle_id)` stays.
+- **H1** — `Users/Index::delete()/toggleActive()/confirmDelete()` now `abort_unless(canManage())`; controls hidden for unmanageable rows. **L3 (guarding `Users/Show` read) was tried then reverted** — it broke existing tests + changed behaviour (hr-admin couldn't view super-admin profiles), out of the approved scope.
+- **H2** — competency media → **private `local` disk** (`Scorecard::registerMediaCollections()->useDisk('local')`); new **`CompetencyAttachmentController`** streams via `route('attachments.show', $media)` gated by **`Scorecard::isViewableBy()`** (super/hr-admin OR owner OR `user.manager_id`); upload rule adds `mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,ppt,pptx,txt,csv`. **Watch-out:** old dev uploads sit on the public disk — `migrate:fresh` clears them.
+- **H5** — later migration adds FKs on `users.department_id/designation_id/manager_id` (all `nullOnDelete`); needs clean data (verified against seeders).
+- **H3 (Seal-MOD1, Amirul's pick over auto-freeze/per-card)** — `appraisal_cycles.mod1_sealed_at/by`; `AppraisalCycle::isMod1Sealed()`; `Session::isEditable()` = MOD1 editable **until** sealed, MOD2 editable **only after** sealed; `Index::sealMod1()`/`canSealMod1()`; `canLock()` now requires the seal (seal→MOD2→lock). Cycle is `Auditable` so the seal auto-logs. Seal is **one-way** (no unseal — MOD2 has org-wide reach to fix anything).
+- **H4 (data-consistency only, Amirul's pick)** — `Departments/Edit::save()` re-syncs subordinates' `manager_id` to the new head on change (excluding the head); `AddEmployee` sets `manager_id=null` when the assignee IS the head; generation warning widened to flag missing/self/inactive appraiser. No new admin UI (reassign/exempt parked).
+- **Merge note:** #18 and #19 both touched `generateScorecards` — auto-merged in the component; the only conflict was two tests added at the same anchor in `GenerateScorecardsTest` (kept both).
+- Suite **300 green** after the final merge. All UI needs `npm run build` (moderation seal UI + users list) — **built 2026-07-01**.
+
+**Still OPEN (Medium/Low, parked):** M1 exempt/void card · M2 env-gate demo seeder (super-admin `password`!) · M3 lock lifecycle transitions · M4 `scorecard_kpis` unique · M5 align pools to MODERATION_STATUSES · M6 soft-delete/unique systemic · M7 force-delete guards · L1–L9. See the audit file.
 
 ## Performance History + Excel Export + Dashboard Cycle Selector — MERGED into `dev` (2026-07-01)
 
