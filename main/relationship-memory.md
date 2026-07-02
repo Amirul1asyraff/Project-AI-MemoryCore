@@ -59,6 +59,8 @@
 - **Decision-Making**: Likes to understand options before choosing
 - **Learning Preference**: Practical examples over pure theory
 - **Git/GitHub workflow (standing rule)**: Before writing code for a feature, CREATE A GITHUB ISSUE and a FEATURE BRANCH off `dev` first. Commits reference the issue; open a PR into `dev` when done. Applies to all projects (confirmed on kpi_pnsb, 2026-06-29).
+- **NEVER delete branches after merge (standing rule, 2026-07-01)**: After a PR merges, sync `dev` but LEAVE every branch in place — do not run `git branch -d`, remote branch deletion, or prune-deletes. Amirul wants merged branches kept.
+- **ALWAYS use the latest stack for Laravel + Livewire (standing rule, 2026-07-02)**: Build against whatever is actually installed / newest — currently **Laravel 13, Livewire 4, Tailwind v4** (Tailwind v4 = CSS `@theme` in `resources/css/app.css`, NOT `tailwind.config.js`). If a prompt names an older version (e.g. "Livewire 3", "tailwind.config.js"), do NOT downgrade to match it — use the latest and tell Amirul. Confirmed on the `template` project scaffold.
 
 ## Personal Preferences
 

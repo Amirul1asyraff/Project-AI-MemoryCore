@@ -1,5 +1,11 @@
 # ⚠️ PNSB KPI — Watch-Outs
 
+## 🚀 DEPLOY-TO-LIVE gate — seeder password (decided 2026-07-01)
+
+The super-admin/demo seeder password is the literal string `password` (audit finding **M2**). Amirul's call: **ALLOWED for dev + staging** — it's a testing convenience, easy to remember. **NOT a bug to fix now.**
+
+**Lucy's job:** this is a **deploy reminder, not a code change.** When Amirul talks about **deploying to production / going live**, LOUDLY flag: rotate/env-gate the seeder password (and strip/guard the other TEMP dev helpers — Quick Login, Fill-targets, Fill-results, demo seeders) BEFORE the live release. Do NOT touch it before then.
+
 ## Phase-gate rules (LOCKED 2026-06-29 — don't regress)
 
 The phase boundaries are now airtight; two rules are load-bearing and easy to break by "tidying":
